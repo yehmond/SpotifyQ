@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+
+    </style>
+    <title>Test search track</title>
+</head>
+
+
+<body>
+<h1>
+    Test search track
+</h1>
+<div id='search-bar' class="autocomplete">
+    <input type="text" name='pin' placeholder="UUID" id='search-bar' list="searchResults">
+    <datalist id="searchResults">
+        <option value="awef"></option>
+        <option value="awef"></option>
+        <option value="awef"></option>
+    </datalist>
+    <input type="submit" value="Enter" id='enter'>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+    const searchBar = document.getElementById('search-bar');
+    const token = 'BQDpCuEiYWK1y0dC_uTmc1os0EwFmdIHhKGqT-PgleZMpkm0wixqHgxx9-JSP9NxpZvBkpX0f2MGN3p0o3myiFs0NryOfeqg3wMzgILJRfhoOReyx5GI4ZpkNVd79N48XsSm2GyKYd09SmVE-HOC-N7qIzIZziYs1KG34vPB56_DMwbGIuyeLlO8XNzHj7KNvpxJtE7KgnzPahwY3LJBNdC6TWUa_PAqWfGLS-TtIZATEvOdbcDV25UsZiY2hRpXhtcBRTH8FpsubfaWHeECXWtasCARmhwpfSKH';
+
+    function getTrack(str, access_token) {
+        const endpoint = "https://api.spotify.com/v1/search";
+        var data = {
+            q: encodeURIComponent(str),
+            type: 'track',
+            limit: 2,
+            market: 'from_token',
+        };
+        var headers = {
+            "Authorization": "Bearer " + access_token
+        };
+
+        $.ajax({
+            type: "GET",
+            url: endpoint,
+            data: data,
+            headers: headers,
+            dataType: 'json',
+            contentType: 'application/json',
+            success: (res) => {
+                var tracks = [];
+                for (var i in res["tracks"]["items"]) {
+                    var album_cover = res["tracks"]["items"][i]["album"]["images"][2]["url"];
+                    var album_name = res["tracks"]["items"][i]["album"]["name"];
+                    var artists = [];
+                    for (var j in res["tracks"]["items"][i]["artists"])
+                        artists.push(res["tracks"]["items"][i]["artists"][j]["name"]);
+                    var id = res["tracks"]["items"][i]["id"];
+                    var duration_ms = res["tracks"]["items"][i]["duration_ms"];
+                    var explicit = res["tracks"]["items"][i]["explicit"];
+                    trackItem = {
+                        album_cover: album_cover,
+                        album_name: album_name,
+                        artists: artists,
+                        id: id,
+                        duration_ms: duration_ms,
+                        explicit: explicit
+                    };
+                    tracks.push(trackItem);
+                }
+            },
+            error: (res) => {
+                console.log(res)
+            }
+        })
+    }
+
+    const tracks =['sunflower', 'takeaway', 'one last time'];
+
+    function showTracks(arr) {
+        for (var i = 0; i < arr.length; i++) {
+            var track = document.createElement("option");
+            track.value = arr[i];
+            searchBar.appendChild(track);
+            console.log('here');
+        }
+    }
+
+    showTracks(tracks);
+
+</script>
+</body>
+
+</html>

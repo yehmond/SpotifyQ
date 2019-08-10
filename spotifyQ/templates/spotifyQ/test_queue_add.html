@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Queue Add</title>
+</head>
+
+<body>
+<h1>
+    Test queue/add
+</h1>
+<input type="text" name='pin' placeholder="track id" id='box' required>
+<input type="submit" value="Enter" id='enter'>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+    const box = document.getElementById("box");
+    const trackID = '3KkXRkHbMCARz0aVfEt68P';
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    let csrftoken = getCookie('csrftoken');
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    function callback(d) {
+        if (d.status === 'verified') {
+            console.log('success!')
+        }
+    }
+
+    document.getElementById("enter").addEventListener("click", function (evt) {
+
+        const url = 'http://127.0.0.1:8000/queue/add';
+        let data = {
+            pin: box.value,
+            playlist_uri: 'test play list',
+            track_name: 'sunflower',
+            track_id: trackID,
+            artist_names: 'artist_name',
+            album_name: 'awef',
+            explicit: true,
+            duration_ms: 3600
+        };
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: JSON.stringify(data),
+            processData: false,
+            contentType: 'application/json; charset=UTF-8',
+            dataType: 'json',
+            statusCode: {
+                204: () => {
+                    // do something
+                },
+                500: () => {
+                    {#alert('error :(');#}
+                }
+            }
+        })
+
+    });
+</script>
+</body>
+
+</html>

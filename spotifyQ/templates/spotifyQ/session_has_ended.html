@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        .navbar {
+            padding: 7px 12px 7px 12px;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #111111;
+        }
+
+        .btn {
+            border-radius: 30px;
+        }
+
+        #wrapper {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            height: calc(100vh - 54px);
+        }
+
+        #wrapper, h2{
+            padding: 0 10px 50px 10px;
+            font-size: calc(2vw + 2vh + 1vmin);
+        }
+    </style>
+    <title>Spotify Q</title>
+</head>
+<body>
+<nav class="navbar sticky-top navbar-light bg-light">
+    <a class="navbar-brand mx-auto" href="{% url 'index' %}">
+        <img src="{% static 'spotifyQ/img/q.PNG' %}" width="30" height="30" class="d-inline-block align-top" alt="">
+        Spotify Q
+        <span class="badge badge-secondary">Beta</span>
+    </a>
+</nav>
+
+<div id="wrapper">
+
+    <div>
+        <h2>
+            The queue has been terminated by the user.
+        </h2>
+    </div>
+
+    <div>
+        <h5>Thank you for using Spotify Q.</h5>
+        <a class="btn btn-primary" href="{% url 'index' %}">Back</a>
+    </div>
+</div>
+</body>
+</html>

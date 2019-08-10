@@ -1,0 +1,74 @@
+body {
+    background-color: #ffffff;
+}
+
+.navbar {
+    padding: 7px 12px 7px 12px;
+
+}
+
+.btn {
+    border-radius: 30px;
+    font-size: medium;
+    font-weight: bold;
+}
+
+.main-form {
+    margin: 1em 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 1em 1em;
+}
+
+.item {
+    color: #111111;
+    width: 100%;
+    padding: 1em 0;
+    max-width: 400px;
+    text-align: center;
+}
+
+#pin-box {
+    width: 85%;
+    text-align: center;
+    font-size: 33px;
+    border-style: solid;
+    border-radius: 30px;
+    border-color: #ebebeb;
+    text-transform: uppercase;
+}
+
+#enter {
+    width: 85%;
+    color: #ffffff;
+}
+
+#spotify {
+    background-color: #1DB954;
+    color: #ffffff;
+    width: 85%;
+}
+
+.changing {
+    -webkit-animation: shake 0.82s cubic-bezier(.36, .07, .19, .97);
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%, 80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%, 50%, 70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%, 60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}

@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type='text/css' href="{% static '/spotifyQ/css/owner.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/spotifyQ/css/auto-complete.css' %}">
+    <title>Spotify Q</title>
+</head>
+
+<body>
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">
+        <img src="{% static 'spotifyQ/img/q.PNG' %}" width="30" height="30" class="d-inline-block align-top" alt="">
+        SpotifyQ
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler"
+            aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarToggler">
+        <ul class="navbar-nav mr-auto ml-2">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#queue" id="queue-btn">Queue</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Previously Played</a>
+            </li>
+        </ul>
+        <a class="nav-link pl-2 pr-1" href="{% url 'logout' %}">
+            <span class='btn btn-outline-dark' id="exit-btn">Exit Session</span>
+        </a>
+    </div>
+</nav>
+
+<div class="row">
+    <div class="col-lg" id="now-playing">
+        <div class="collapse" id="collapse">
+            <div class="card card-body pr-4">
+                Others can add to your Spotify queue using this PIN:
+                <button type="button" id="close-btn" class="close" aria-label="Close" data-toggle="collapse"
+                        data-target="#collapse"
+                        aria-expanded="false" aria-controls="collapse">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h2 id="pin-code">{{ pin }}</h2>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center pt-3">
+            <h2>Now playing</h2>
+        </div>
+        <div class="d-flex justify-content-center mt-3">
+            <img id="cover" src="{% if cover != None %}
+                                    {{ cover }}
+                                 {% else %}
+                                   {% static 'spotifyQ/img/cover_placeholder.png' %}
+                                 {% endif %}
+
+        " alt="album-cover.png">
+        </div>
+        <div class="d-flex justify-content-center mt-3">
+            <div class="progress mt-3" id="progress">
+                <div class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0"
+                     aria-valuemax="100"></div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center mt-3">
+            <p><strong>{{ track_name | default:"Nothing playing at the moment" }}</strong>
+                <br>
+                {% if artists != None %}
+                    {% for a in artists %}
+                        {% if forloop.last %}
+                            {{ a }}
+                        {% else %}
+                            {{ a }},
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    Click the button below to get started
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <button class="btn btn-primary" id="lyrics-button">Add a Song to Queue</button>
+        </div>
+        <div>
+            <button class="btn btn-primary" id='pin-btn' type="button" data-toggle="collapse" data-target="#collapse"
+                    aria-expanded="false" aria-controls="collapse">
+                Queue PIN
+            </button>
+        </div>
+    </div>
+    <div class="col-lg" id="queue">
+        <div class="d-flex justify-content-center py-3">
+            <h2>Queue</h2>
+        </div>
+
+
+        <div class="d-flex justify-content-center anim" id="search-form">
+            <input type="text" class="form-control" name="search-bar"
+                   style="background-image: url({% static 'spotifyQ/img/searchicon.png' %});
+                           " id="search-bar"
+                   placeholder="Add a song to queue...">
+            <button type="submit" class="btn btn-primary" id="add-btn">Add</button>
+        </div>
+
+
+        <div class="d-flex justify-content-center px-1 pt-3">
+            <table>
+                <tbody>
+                {% for q in queue %}
+                    <tr>
+                    <td> {{ q.track_name }}
+                        <div class="artist">{{q.artists}}</div>
+                    </td>
+                    <td class="vote">
+                        <a href="https://www.google.com"><img src="{% static 'spotifyQ/img/up.png' %}"
+                                                              class="vote-btn"/></a>
+                        <div class="vote-count">{{q.votes}}</div>
+                        <a href="https://www.google.com"><img src="{% static 'spotifyQ/img/down.png' %}"
+                                                              class="vote-btn"/></a>
+                    </td>
+                </tr>
+                {%  endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+<script
+        src="https://code.jquery.com/color/jquery.color.plus-names-2.1.2.min.js"
+        integrity="sha256-Wp3wC/dKYQ/dCOUD7VUXXp4neLI5t0uUEF1pg0dFnAE="
+        crossorigin="anonymous"></script>
+<script src='{% static '/spotifyQ/js/owner.js' %}'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+</script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+</script>
+<script src="{% static 'spotifyQ/js/auto-complete-scroll-from-top.min.js' %}"></script>
+</body>
+</html>
