@@ -9,12 +9,13 @@ from django.shortcuts import render, redirect, reverse, get_object_or_404
 from .forms import PINForm
 from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get_spotify_owner_id, \
     get_homepage_context, try_create_owner, add_song_to_queue, upvote_track, downvote_track, \
-    get_search_token, SEARCH_TOKEN
+    get_search_token, SEARCH_TOKEN, get_current_track, transfer_playback, fetch_devices
 
 # Create your views here.
 
 STATE_KEY = 'spotify_auth_state'
 REDIRECT_URI = 'http://127.0.0.1:8000/callback'
+# REDIRECT_URI = 'http://192.168.86.222:8000/callback'
 
 
 # BUG
@@ -108,7 +109,8 @@ def login(request):
             'user-read-playback-state ' \
             'user-read-currently-playing ' \
             'playlist-modify-public ' \
-            'playlist-modify-private '
+            'playlist-modify-private ' \
+            'streaming '
     # state ensures that incoming connection is result of an authentication request, since redirect_uri can be guessed
     state = generate_random_string(16)
     # store state in session
@@ -174,7 +176,7 @@ def callback(request):
             owner_id = get_spotify_owner_id(access_token)
             expires_in = r.json()['expires_in']
             expires_at = datetime.datetime.now() + datetime.timedelta(seconds=expires_in - 60)
-            print('refreshed expire at right after login', expires_at)
+            print('refreshed expire_at right after login', expires_at)
             try_create_owner(owner_id, access_token, refresh_token, expires_at)
 
             request.session['owner_id'] = owner_id
@@ -314,6 +316,7 @@ def verify(request):
 
 
 def test(request):
+    fetch_devices('')
     return render(request, 'spotifyQ/test_button_inside_input.html')
 
 

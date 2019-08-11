@@ -75,7 +75,7 @@ h2 {
     font-size: 2em
 }
 
-#lyrics-button {
+#add-a-song-to-queue-btn {
     margin-bottom: 10px;
 }
 
@@ -89,9 +89,6 @@ h2 {
     width: 100vw;
 }
 
-html {
-    scroll-behavior: smooth;
-}
 
 @media only screen and (min-width: 992px) {
     #queue-btn {

@@ -1,6 +1,7 @@
 import os
 import uuid
 from random import randrange
+import json
 
 import requests
 from django.core.exceptions import ValidationError
@@ -29,6 +30,7 @@ class Owner(models.Model):
     pin = models.CharField(max_length=4)
     country = models.CharField(max_length=2, null=True, blank=True, default='CA')
     playlist_uri = models.CharField(max_length=255)
+    last_update = models.DateTimeField(default=datetime.datetime.now)
 
     def __str__(self):
         return str(self.owner_id)
@@ -236,7 +238,7 @@ def get_spotify_owner_id(access_token):
 #     except Owner.DoesNotExist:
 #         return '-1'
 
-def add_to_playlist(owner, playlist_uri, access_token):
+def update_spotify_playlist(owner, playlist_uri, access_token):
 
     if owner.expires_at <= datetime.datetime.now():
         refresh_token = Owner.objects.get(pin=owner.pin).refresh_token
@@ -248,13 +250,10 @@ def add_to_playlist(owner, playlist_uri, access_token):
         'Content-Type': 'application/json'
     }
     l = [f'spotify:track:{i.track_id}' for i in list(Queue.objects.filter(pin=owner.pin).order_by('-votes'))]
-    print(l)
     params = {
         'uris': ','.join(l)
     }
     r = requests.put(endpoint, headers=headers, params=params)
-    print(r.text)
-    print(r.status_code)
     if r.status_code == 201:
         return True
     else:
@@ -281,11 +280,18 @@ def get_current_track(access_token):
         # }
         # return track
     else:
+        j = r.json()
         track = {
-            'track_name': r.json()['item']['name'],
-            'album_name': r.json()['item']['album']['name'],
-            'artists': [a['name'] for a in r.json()['item']['artists']],
-            'cover': r.json()['item']['album']['images'][0]['url']
+            'track_name': j['item']['name'],
+            'album_name': j['item']['album']['name'],
+            'duration_ms': j['item']['duration_ms'],
+            'artists': ', '.join([a['name'] for a in j['item']['artists']]),
+            'cover': j['item']['album']['images'][0]['url'],
+            'progress_ms': j['progress_ms'],
+            'is_playing': j['is_playing'],
+            'timestamp': j['timestamp'],
+            'track_id': j['item']['id'],
+
         }
         return track
 
@@ -335,6 +341,35 @@ def play_next_track(access_token) -> bool:
 
     r = requests.post('https://api.spotify.com/v1/me/player/next', headers=headers)
     return r.status_code == 204
+
+
+def transfer_playback(access_token, device_id):
+    device_id = '140f60fa0edd019c127f1578bbc06af5043e07fb'
+    endpoint = 'https://api.spotify.com/v1/me/player'
+    headers = {
+        'Authorization': 'Bearer ' + access_token
+    }
+    data = {
+        'device_ids': [device_id],
+        'play': True
+    }
+    r = requests.put(endpoint, headers=headers, json=data)
+    print(r.text)
+    if r.status_code == 204:
+        print('ok')
+        return True
+    else:
+        return False
+
+
+def fetch_devices(access_token):
+    endpoint = 'https://api.spotify.com/v1/me/player/devices'
+    headers = {
+        'Authorization': 'Bearer ' + access_token
+    }
+    r = requests.get(endpoint, headers=headers)
+    return r.json()
+
 
 
 def refresh_access_token(refresh_token, owner_id):
