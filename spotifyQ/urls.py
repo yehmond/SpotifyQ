@@ -14,6 +14,8 @@ urlpatterns = [
     path('queue/add/', views.queue_add, name='queue_add'),
     path('queue/upvote/', views.queue_upvote, name='queue_upvote'),
     path('queue/downvote/', views.queue_downvote, name='queue_downvote'),
+    path('queue/next/', views.queue_next, name='queue_next'),
+    path('queue/played/', views.queue_played, name='queue_played'),
     path('token/', views.search_token, name='search_token'),
     path('search/', views.search_tracks, name='search_track'),
 

@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect, reverse, get_object_or_404
 from .forms import PINForm
 from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get_spotify_owner_id, \
     get_homepage_context, try_create_owner, add_song_to_queue, upvote_track, downvote_track, \
-    get_search_token, SEARCH_TOKEN, get_current_track, transfer_playback, fetch_devices
+    get_search_token, SEARCH_TOKEN, get_current_track, transfer_playback, fetch_devices, play_next_track, delete_current_track
 
 # Create your views here.
 
@@ -279,6 +279,37 @@ def queue_downvote(request):
         return JsonResponse({'error': 'malformed syntax'}, status=400)
 
 
+def queue_next(request):
+    if not request.is_ajax() or request.method != 'POST':
+        return JsonResponse({'error': 'incorrect request method'}, status=403)
+    try:
+        j = json.loads(request.body)
+        pin = j['pin']
+        res = play_next_track(pin)
+        if res is False:
+            return JsonResponse({'error': 'no user associated with this pin'}, status=404)
+        return JsonResponse({'queue': res}, status=200)
+
+    except KeyError:
+        return JsonResponse({'error': 'malformed syntax'}, status=400)
+
+
+def queue_played(request):
+    """Called by the user when the next song on the queue has been played and the database needs to be updated"""
+    if not request.is_ajax() or request.method != 'POST':
+        return JsonResponse({'error': 'incorrect request method'}, status=403)
+    try:
+        j = json.loads(request.body)
+        _uuid = j['_uuid']
+        res = delete_current_track(_uuid)
+        if res is False:
+            return JsonResponse({'error': 'no user associated with this pin'}, status=404)
+        return HttpResponse(status=204)
+
+    except KeyError:
+        return JsonResponse({'error': 'malformed syntax'}, status=400)
+
+
 def search_token(request):
     if not request.is_ajax() or request.method != 'POST':
         return JsonResponse({'error': 'incorrect request method'}, status=403)
@@ -316,7 +347,7 @@ def verify(request):
 
 
 def test(request):
-    fetch_devices('')
+    play_next_track('RJBV')
     return render(request, 'spotifyQ/test_button_inside_input.html')
 
 

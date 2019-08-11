@@ -29,7 +29,6 @@ class Owner(models.Model):
     expires_at = models.DateTimeField(default=datetime.datetime.now)
     pin = models.CharField(max_length=4)
     country = models.CharField(max_length=2, null=True, blank=True, default='CA')
-    playlist_uri = models.CharField(max_length=255)
     last_update = models.DateTimeField(default=datetime.datetime.now)
 
     def __str__(self):
@@ -54,7 +53,7 @@ class Queue(models.Model):
 
     class Meta:
         managed = True
-        ordering = ('-votes','add_time')
+        ordering = ('-votes', 'add_time')
 
 
 def generate_random_string(length):
@@ -115,13 +114,12 @@ def create_owner(owner_id, access_token, refresh_token, expires_at):
                              access_token=access_token,
                              refresh_token=refresh_token,
                              expires_at=expires_at,
-                             pin=generate_pin(),
-                             playlist_uri=create_playlist(owner_id, access_token, expires_at))
+                             pin=generate_pin(),)
     o.save()
 
 
 def create_playlist(owner_id, access_token, expires_at):
-
+    """Creates a playlist on the owner's Spotify Account to be used for queueing"""
     if expires_at <= datetime.datetime.now():
         refresh_token = Owner.objects.get(owner_id=owner_id).refresh_token
         access_token = refresh_access_token(refresh_token, owner_id)
@@ -143,13 +141,10 @@ def create_playlist(owner_id, access_token, expires_at):
         '-1'
 
 
-
-
-def add_song_to_queue(pin, playlist_uri, track_name, track_id, artists, album_name, explicit, duration_ms):
+def add_song_to_queue(pin, track_name, track_id, artists, album_name, explicit, duration_ms):
     """
     Adds song to queue in database with the following attributes.
     :param pin: Pin that links to the owner that it belongs to
-    :param playlist_uri: Playlist that it will be added to
     :param track_name: Name of the song
     :param track_id: Spotify unique ID of the track
     :param artists: Artist name(s) separated by commas
@@ -162,7 +157,6 @@ def add_song_to_queue(pin, playlist_uri, track_name, track_id, artists, album_na
         owner = Owner.objects.get(pin=pin)
         q = Queue.objects.create(owner=owner,
                                  pin=pin,
-                                 playlist_uri=playlist_uri,
                                  track_name=track_name,
                                  track_id=track_id,
                                  artists=artists,
@@ -179,7 +173,7 @@ def add_song_to_queue(pin, playlist_uri, track_name, track_id, artists, album_na
 def upvote_track(_uuid):
     try:
         q = Queue.objects.get(_uuid=_uuid)
-        q.votes += 1
+        q.votes = models.F('votes') + 1
         q.save()
     except Queue.DoesNotExist:
         return False
@@ -190,7 +184,7 @@ def upvote_track(_uuid):
 def downvote_track(_uuid):
     try:
         q = Queue.objects.get(_uuid=_uuid)
-        q.votes -= 1
+        q.votes = models.F('votes') - 1
         q.save()
     except Queue.DoesNotExist:
         return False
@@ -217,49 +211,6 @@ def get_spotify_owner_id(access_token):
         return r.json()['id']
 
 
-# def try_get_current_track(owner_id):
-#
-#     try:
-#         o = Owner.objects.get(owner_id=owner_id)
-#
-#         # If access_token has expired
-#         if o.expires_at <= datetime.datetime.now():
-#             refresh_token = Owner.objects.get(owner_id=owner_id).refresh_token
-#             access_token = refresh_access_token(refresh_token, owner_id)
-#             if access_token == '-1':
-#                 return '-1'
-#             context = get_current_track(access_token)
-#             context['pin'] = o.pin
-#             return context
-#
-#         context = get_current_track(o.access_token)
-#         context['pin'] = o.pin
-#         return context
-#     except Owner.DoesNotExist:
-#         return '-1'
-
-def update_spotify_playlist(owner, playlist_uri, access_token):
-
-    if owner.expires_at <= datetime.datetime.now():
-        refresh_token = Owner.objects.get(pin=owner.pin).refresh_token
-        access_token = refresh_access_token(refresh_token, owner.owner_id)
-
-    endpoint = f'https://api.spotify.com/v1/playlists/{playlist_uri}/tracks'
-    headers = {
-        'Authorization': 'Bearer ' + access_token,
-        'Content-Type': 'application/json'
-    }
-    l = [f'spotify:track:{i.track_id}' for i in list(Queue.objects.filter(pin=owner.pin).order_by('-votes'))]
-    params = {
-        'uris': ','.join(l)
-    }
-    r = requests.put(endpoint, headers=headers, params=params)
-    if r.status_code == 201:
-        return True
-    else:
-        return False
-
-
 def get_current_track(access_token):
     """
     Returns a dictionary object containing current playing track information.
@@ -274,11 +225,6 @@ def get_current_track(access_token):
     r = requests.get(endpoint, headers=headers)
     if r.status_code != 200:
         return {}
-        # track = {
-        #     'track_name': 'Nothing playing at the moment',
-        #     'artists': ['Click the button below to get started']
-        # }
-        # return track
     else:
         j = r.json()
         track = {
@@ -291,7 +237,6 @@ def get_current_track(access_token):
             'is_playing': j['is_playing'],
             'timestamp': j['timestamp'],
             'track_id': j['item']['id'],
-
         }
         return track
 
@@ -299,7 +244,7 @@ def get_current_track(access_token):
 def get_homepage_context(**kwargs):
     """
     Returns homepage context to be displayed after owner or guest are successfully authenticated.
-    :param pin: owner_id or pin
+    :param kwargs: owner_id or pin
     :return: Returns context containing track_name, cover, artists, pin, to be displayed on the homepage.
              Returns None if owner has terminated queue session.
     """
@@ -307,6 +252,9 @@ def get_homepage_context(**kwargs):
         context = get_current_track(access_token)
         context['pin'] = o.pin
         get_queue(context, o.owner_id)
+        # adds access token to owner.html so Spotify WebPlayer can be initiated with it
+        if 'owner_id' in kwargs:
+            context['access_token'] = access_token
         return context
 
     try:
@@ -334,13 +282,37 @@ def get_queue(context, owner_id):
     context['queue'] = list(q)
 
 
-def play_next_track(access_token) -> bool:
-    headers = {
-        'Authorization': 'Bearer ' + access_token
-    }
+def play_next_track(pin):
+    try:
+        o = Owner.objects.get(pin=pin)
+        if o.expires_at <= datetime.datetime.now():
+            refresh_token = Owner.objects.get(pin=o.pin).refresh_token
+            o.access_token = refresh_access_token(refresh_token, o.owner_id)
 
-    r = requests.post('https://api.spotify.com/v1/me/player/next', headers=headers)
-    return r.status_code == 204
+        headers = {
+            'Authorization': 'Bearer ' + o.access_token
+        }
+        queue = o.queue_set.all()
+        print(f'spotify:track:{queue.first().track_id}')
+        data = {
+            # 'uris': [f'spotify:track:{i.track_id}' for i in list(queue)]
+            'uris': [f'spotify:track:{queue.first().track_id}']
+        }
+        r = requests.put('https://api.spotify.com/v1/me/player/play', headers=headers, json=data)
+        res = []
+        for i in queue:
+            res.append(i._uuid)
+        return res
+    except Owner.DoesNotExist:
+        return False
+
+
+def delete_current_track(_uuid):
+    try:
+        Queue.objects.filter(_uuid=_uuid).delete()
+        return True
+    except Owner.DoesNotExist:
+        return False
 
 
 def transfer_playback(access_token, device_id):
@@ -369,7 +341,6 @@ def fetch_devices(access_token):
     }
     r = requests.get(endpoint, headers=headers)
     return r.json()
-
 
 
 def refresh_access_token(refresh_token, owner_id):

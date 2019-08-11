@@ -1,45 +1,3 @@
-window.onSpotifyWebPlaybackSDKReady = () => {
-    const token = '[My Spotify Web API access token]';
-    const player = new Spotify.Player({
-        name: 'SpotifyQ Web Player',
-        getOAuthToken: cb => {
-            cb('BQCXKXNsu0xXqwsn8iYSWN7W2TRCDopK8t8Uj-bIvShllG3G-Y01sdOBukRuTjUyatIpCivF4G_H4eDites8OOB-ly9oxokfirz6ZMTJnGj-py3h3jM78wZRr22N7WnCEl_9CEwK95Nei3LSLYL6QZJBv_GJc2Q6hbpsGRgjFHpm-s4zL53JejGRrvZInB4M_V4LsLoykxR9gRY-BAjpDR6Le9m61BNQBMaLb-llAN3QLnOjk7I3EIa5GmpF');
-        }
-    });
-
-    // Error handling
-    player.addListener('initialization_error', ({message}) => {
-        console.error(message);
-    });
-    player.addListener('authentication_error', ({message}) => {
-        console.error(message);
-    });
-    player.addListener('account_error', ({message}) => {
-        console.error(message);
-    });
-    player.addListener('playback_error', ({message}) => {
-        console.error(message);
-    });
-
-    // Playback status updates
-    player.addListener('player_state_changed', state => {
-        console.log(state);
-    });
-
-    // Ready
-    player.addListener('ready', ({device_id}) => {
-        console.log('Ready with Device ID', device_id);
-    });
-
-    // Not Ready
-    player.addListener('not_ready', ({device_id}) => {
-        console.log('Device ID has gone offline', device_id);
-    });
-
-    // Connect to the player!
-    player.connect();
-};
-
 $(document).ready(() => {
 
     window.mobileAndTabletCheck = function () {
@@ -88,7 +46,7 @@ $(document).ready(() => {
     const searchForm = document.getElementById('search-form');
     const addBtn = document.getElementById('add-btn');
     const pin = document.getElementById("pin-code").innerText;
-
+    const loc = window.location;
     let track_name = '';
     let trackID = '';
     let artists = '';
@@ -97,9 +55,10 @@ $(document).ready(() => {
     let explicit = false;
     let renewed = false;
     let progress_ms = 0;
-
+    let prev_track_id = '';
     let cache = [];
     let my_autoComplete;
+    let queue = [];
 
     function parseSearchResults(res) {
         var searchResults = [];
@@ -135,8 +94,7 @@ $(document).ready(() => {
     function searchTracks(term, response) {
 
         if (!/^\s*$/.test(term)) {
-            // const endpoint = "http://127.0.0.1:8000/search/";
-            const endpoint = "http://192.168.86.222:8000/search/";
+            const endpoint = loc.protocol + "//" + loc.host + "/search/";
             var data = {
                 q: term
             };
@@ -273,10 +231,9 @@ $(document).ready(() => {
             duration_ms != 0 &&
             explicit != null &&
             renewed != null) {
-            // const url = 'http://127.0.0.1:8000/queue/add/';
-            const url = 'http://192.168.86.222:8000/queue/add/';
+            const url = loc.protocol + "//" + loc.host + "/queue/add/";
             let data = {
-                message: 'add_to_queue',
+                message: 'add_track_to_queue',
                 pin: pin,
                 track_name: track_name,
                 track_id: trackID,
@@ -321,8 +278,7 @@ $(document).ready(() => {
             "        <h5>Thank you for using Spotify Q.</h5>\n" +
             "    </div>\n" +
             "    <div class = \"d-flex justify-content-center container\">\n" +
-            // "        <a class=\"btn btn-primary\" href=\"http://127.0.0.1:8000/\">Back</a>\n" +
-            "        <a class=\"btn btn-primary\" href=\"http://192.168.86.222:8000/\">Back</a>\n" +
+            "        <a class=\"btn btn-primary\" href=\"" + "loc.protocol" + "//\">Back</a>\n" +
             "    </div>";
     }
 
@@ -352,7 +308,6 @@ $(document).ready(() => {
 
     var testForm = $('#testForm');
     var tbody = $('tbody');
-    var loc = window.location;
     var wsStart = 'ws://';
     if (loc.protocol == 'https:')
         wsStart = 'wss://';
@@ -360,8 +315,8 @@ $(document).ready(() => {
     var socket = new ReconnectingWebSocket(endpoint);
     socket.onmessage = function (e) {
         j = JSON.parse(e.data);
-        console.log('message', e);
-        if (j.message == 'add_to_queue') {
+        // console.log('message', e);
+        if (j.message == 'add_track_to_queue') {
             searchBar.value = "";
             tbody.append(`<tr>
                     <td>${j.track_name}
@@ -386,7 +341,6 @@ $(document).ready(() => {
             $('#track_name').attr('class', j.track_id);
             duration_ms = j.duration_ms;
             progress_ms = j.progress_ms;
-            console.log('updated current plaback');
         }
 
     };
@@ -401,7 +355,6 @@ $(document).ready(() => {
     };
 
     $("#add-a-song-to-queue-btn").on('click', function (e) {
-        console.log('in jquery');
 
         $('html, body').animate({
             scrollTop: $('#queue').offset().top
@@ -409,9 +362,6 @@ $(document).ready(() => {
         searchBar.focus();
     });
 
-    // Update Homepage every 90 seconds
-    // setInterval(updateHomepageContext, 60);
-    //
     // function updateHomepageContext() {
     //     let data = {
     //         message: 'update_current_playback',
@@ -420,6 +370,120 @@ $(document).ready(() => {
     // }
 
     console.log($('#track_name').attr('class'));
+    window.onSpotifyWebPlaybackSDKReady = () => {
+        var token = $('#access_token').text();
+        const player = new Spotify.Player({
+            name: 'SpotifyQ Web Player',
+            getOAuthToken: cb => {
+                cb(token);
+            }
+        });
+
+        // Error handling
+        player.addListener('initialization_error', ({message}) => {
+            console.error(message);
+        });
+        player.addListener('authentication_error', ({message}) => {
+            console.error(message);
+        });
+        player.addListener('account_error', ({message}) => {
+            console.error(message);
+        });
+        player.addListener('playback_error', ({message}) => {
+            console.error(message);
+        });
+
+        // Playback status updates
+        player.addListener('player_state_changed', (state) => {
+            // console.log('Currently Playing', current_track);
+            console.log('playback state change');
+            if (state) {
+                var current_track = state.track_window.current_track;
+
+                // if at the end of the song, play next song
+                if (state.duration - state.position <= 1000) {
+                    player.pause().then(() => {
+                        console.log('paused')
+                    });
+                    playNextSong();
+                }
+
+                // if track has changed, then update the other devices
+                if (prev_track_id != current_track['id']) {
+                    console.log('updating other devices');
+                    prev_track_id = current_track['id'];
+                    var artists = [];
+                    for (let i in current_track['artists'])
+                        artists.push(current_track['artists'][i]['name']);
+                    let data = {
+                        message: 'update_current_playback',
+                        track_id: current_track['id'],
+                        track_name: current_track['name'],
+                        artists: artists.join(", "),
+                        album_name: current_track['album']['name'],
+                        cover: current_track['album']['images'][0]['url'],
+                        progress_ms: state.position,
+                        duration_ms: state.duration,
+                    };
+                    socket.send(JSON.stringify(data));
+                }
+            }
+
+
+        });
+
+        // Ready
+        player.addListener('ready', ({device_id}) => {
+            console.log('Ready with Device ID', device_id)
+
+        });
+
+        // Not Ready
+        player.addListener('not_ready', ({device_id}) => {
+            console.log('Device ID has gone offline', device_id);
+        });
+
+        // Connect to the player!
+        player.connect();
+    };
+
+
+    function playNextSong() {
+        console.log('trying to play next song');
+        $.ajax({
+            type: "POST",
+            url: loc.protocol + "//" + loc.host + "/queue/next/",
+            data: JSON.stringify({pin: pin}),
+            dataType: 'json',
+            success: (res) => {
+                console.log('Playing next song');
+                if ($("tr").get(0))
+                    $("tr").get(0).remove();
+                queue = res.queue;
+                // signal server that song has started playing and delete currently playing song from db
+                if (queue.length != 0) {
+                    $.ajax({
+                        type: "POST",
+                        url: loc.protocol + "//" + loc.host + "/queue/played/",
+                        data: JSON.stringify({_uuid: queue[0]}),
+                        dataType: 'json'
+                    })
+                }
+
+            },
+            statusCode: {
+                500: () => {
+                    alert('Server overloaded :( Please try again later')
+                },
+                404: () => {
+
+                }
+            }
+
+        })
+    }
+
+
 });
 
 
