@@ -75,9 +75,17 @@ ASGI_APPLICATION = 'Spotify.routing.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'd17ghkfmj070ou',
+        'USER': 'spwhfngpsyvkap',
+        'PASSWORD': '96eda895c1a02efc7ba81b991df9b1919f42de7fbcb35e8fc0d9ecf8bb2b35f2',
+        'HOST': 'ec2-54-204-35-248.compute-1.amazonaws.com',
+        'PORT': '5432',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # }
 }
 
 # Password validation

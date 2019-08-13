@@ -39,15 +39,15 @@ class Owner(models.Model):
 
 class Queue(models.Model):
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE)
-    queue_id = models.CharField(max_length=255, primary_key=True, editable=False)
+    queue_id = models.CharField(max_length=255, primary_key=False)
     pin = models.CharField(max_length=4)
     track_name = models.TextField()
     track_id = models.CharField(max_length=25)
     artists = models.CharField(max_length=255)
     album_name = models.CharField(max_length=255)
     explicit = models.BooleanField()
-    duration_ms = models.SmallIntegerField()
-    votes = models.SmallIntegerField(default=0)
+    duration_ms = models.IntegerField()
+    votes = models.IntegerField(default=0, primary_key=False)
     add_time = models.DateTimeField()
 
     def __str__(self):

@@ -141,7 +141,7 @@ $(document).ready(() => {
 
     function parseExistingQueue() {
         existing_queue.forEach((elem) => {
-            let queue_id = elem.pk;
+            let queue_id = elem.fields.queue_id;
             let votes = elem.fields.votes;
             let track_name = elem.fields.track_name;
             let artists = elem.fields.artists;
