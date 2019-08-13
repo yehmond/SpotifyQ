@@ -120,13 +120,13 @@
             </button>
         </div>
     </div>
-    <div class="col-lg" id="queue">
+    <div class="col-lg p-0 m-0" id="queue">
         <div class="d-flex justify-content-center py-3">
             <h2>Queue</h2>
         </div>
 
 
-        <div class="d-flex justify-content-center anim" id="search-form">
+        <div class="d-flex justify-content-center anim mx-3" id="search-form">
             <input type="text" class="form-control" name="search-bar"
                    style="background-image: url({% static 'spotifyQ/img/searchicon.png' %});
                            " id="search-bar"
@@ -135,7 +135,7 @@
         </div>
 
 
-        <div class="d-flex justify-content-center px-1 pt-3">
+        <div class="pt-3">
             <table>
                 <tbody>
                 {% for q in queue %}
@@ -150,7 +150,7 @@
                                      class="vote-btn vote-up"/></a>
                             <div class="vote-count">{{ q.votes }}</div>
                             <a href="" class="vote-down"><img src="{% static 'spotifyQ/img/down.png' %}"
-                                            class="vote-btn vote-down"/></a>
+                                                              class="vote-btn vote-down"/></a>
                             <div class="queue_id" style="display: none">{{ q.queue_id }}</div>
                         </td>
                     </tr>
@@ -162,7 +162,14 @@
 </div>
 <div id="access_token" style="display: none">{{ access_token }}</div>
 <div id="expires_at" style="display: none">{{ expires_at }}</div>
+<script>
+    var existing_queue = {{ existing_queue | safe }};
+</script>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script
+        src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+        crossorigin="anonymous"></script>
 <script src="https://sdk.scdn.co/spotify-player.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
 <script

@@ -33,7 +33,7 @@ class QueueConsumer(AsyncConsumer):
                     album_name=d['album_name'],
                     explicit=d['explicit'],
                     duration_ms=d['duration_ms'],
-                    queue_id=d['queue_id']
+                    queue_id=d['queue_id'],
                 )
                 data = {
                     'type': 'pin.add_track_to_queue',
@@ -44,7 +44,8 @@ class QueueConsumer(AsyncConsumer):
                     'explicit': d['explicit'],
                     'duration_ms': d['duration_ms'],
                     'artists': d['artists'],
-                    'queue_id': d['queue_id']
+                    'queue_id': d['queue_id'],
+                    'add_time': d['add_time']
                 }
                 # Broadcasts the message event to be sent
                 await self.channel_layer.group_send(self.pin, data)
@@ -87,7 +88,8 @@ class QueueConsumer(AsyncConsumer):
                 'message': event['message'],
                 'track_name': event['track_name'],
                 'artists': event['artists'],
-                'queue_id': event['queue_id']
+                'queue_id': event['queue_id'],
+                'add_time': event['add_time']
             })
         })
 

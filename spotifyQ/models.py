@@ -5,6 +5,7 @@ import json
 
 import requests
 from django.core.exceptions import ValidationError
+from django.core.serializers import serialize
 from django.db import models
 import datetime
 # Create your models here.
@@ -284,6 +285,7 @@ def get_homepage_context(**kwargs):
 def get_queue(context, owner_id):
     q = Queue.objects.filter(owner_id=owner_id).order_by('-votes')
     context['queue'] = list(q)
+    context['existing_queue'] = serialize('json', q)
 
 
 def play_next_track(pin, device_id):

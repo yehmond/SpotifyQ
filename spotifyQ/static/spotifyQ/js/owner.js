@@ -1,4 +1,72 @@
 $(document).ready(() => {
+    const queueElem = $("tbody");
+
+    class Track {
+        constructor(queue_id, votes, track_name, artists, add_time, newly_added) {
+            this.queue_id = queue_id;
+            this.votes = votes;
+            this.track_name = track_name;
+            this.artists = artists;
+            this.add_time = add_time;
+            this.newly_added = newly_added;
+        }
+
+    }
+
+    class Queue {
+        constructor() {
+            this.queue = []
+        }
+
+        add(track) {
+            this.queue.push(track);
+        }
+
+        remove() {
+            this.queue.pop();
+        }
+
+        sort() {
+            this.queue.sort((a, b) => {
+                if (a.votes < b.votes) return 1;
+                if (a.votes > b.votes) return -1;
+                if (a.add_time > b.add_time) return 1;
+                if (a.add_time < b.add_time) return -1;
+            });
+            return this.queue;
+        }
+
+        render() {
+            this.sort();
+            var tRow = '';
+            this.queue.forEach((elem) => {
+                if (elem.newly_added) {
+                    tRow += `<tr id="newly_added">`;
+                    elem.newly_added = false;
+                } else {
+                    tRow += `<tr>`;
+                }
+                tRow += `<td>
+                            ${elem.track_name}
+                            <div class="artist">${elem.artists}</div>
+                        </td>
+                        <td class="vote">
+                        <a href="" class="vote-up">
+                            <img src="http://${window.location.host}/static/spotifyQ/img/up.png" class="vote-btn vote-up"/>
+                        </a>
+                        <div class="vote-count">${elem.votes}</div>
+                        <a href="" class="vote-down">
+                            <img src="http://${window.location.host}/static/spotifyQ/img/down.png" class="vote-btn vote-down"/>
+                        </a>
+                        <div class="queue_id" style="display: none">${elem.queue_id}</div>
+                    </td>
+                    </tr>`;
+            });
+            queueElem.html(tRow);
+            $("#newly_added").effect("highlight", 1200);
+            $("#newly_added").attr('id', '');
+        }
+    }
 
     window.mobileAndTabletCheck = function () {
         var check = false;
@@ -68,7 +136,24 @@ $(document).ready(() => {
     let nothingPlaying = true;
     let cache = [];
     let my_autoComplete;
-    let queue = [];
+    let addedAnimationIsRunning = false;
+    let q = new Queue();
+
+    function parseExistingQueue() {
+        existing_queue.forEach((elem) => {
+            let queue_id = elem.pk;
+            let votes = elem.fields.votes;
+            let track_name = elem.fields.track_name;
+            let artists = elem.fields.artists;
+            let add_time = elem.fields.add_time;
+            let t = new Track(queue_id, votes, track_name, artists, add_time);
+            q.add(t);
+        });
+        console.log(q);
+    }
+
+    parseExistingQueue();
+
 
     function parseSearchResults(res) {
         var searchResults = [];
@@ -127,6 +212,17 @@ $(document).ready(() => {
 
     }
 
+    function displayMessage(msg) {
+        document.body.getElementsByClassName("row")[0].innerHTML = "<div class = \"d-flex justify-content-center pt-3 px-3 container\" style='text-align: center;'>\n" +
+            "        <h1>\n" +
+            "            " + msg + "\n" +
+            "        </h1>\n" +
+            "    </div>\n" +
+            "\n" +
+            "<div class = \"d-flex justify-content-center container\">\n" +
+            "        <a class=\"btn btn-primary\" href=\"" + "loc.protocol" + "//\">Refresh</a>\n" +
+            "    </div>";
+    }
 
     // Called when autocomplete renders each individual track result in the autocomplete drop down
     function renderItem(item, search) {
@@ -153,30 +249,32 @@ $(document).ready(() => {
 
     // Lights up search bar and initiates autocomplete object when search bar is in focus
     searchBar.onfocus = function (e) {
-        addBtn.style.backgroundColor = "#007bff";
-        addBtn.style.color = "#ffffff";
-        searchBar.style.backgroundColor = "#343a40";
-        my_autoComplete = new autoComplete({
-            selector: 'input[name="search-bar"]',
-            minChars: 2,
-            delay: 200,
-            offsetTop: 10,
-            cache: true,
-            source: searchTracks,
-            renderItem: renderItem,
-            onSelect: function (e, term, item) {
-                trackID = item.querySelector("#track_id").innerText;
-                track_name = item.querySelector("#track_name").innerText;
-                artists = item.querySelector("#artists").innerText;
-                album_name = item.querySelector("#album_name").innerText;
-                duration_ms = item.querySelector("#duration_ms").innerText;
-                explicit = item.querySelector("#explicit").innerText === "true";
-                renewed = true;
-                addBtn.click();
-            }
-        });
+        if (!addedAnimationIsRunning) {
+            addBtn.style.backgroundColor = "#007bff";
+            addBtn.style.color = "#ffffff";
+            searchBar.style.backgroundColor = "#343a40";
+        }
     };
-    var addedAnimationIsRunning = false;
+    my_autoComplete = new autoComplete({
+        selector: 'input[name="search-bar"]',
+        minChars: 2,
+        delay: 200,
+        offsetTop: 10,
+        cache: true,
+        source: searchTracks,
+        renderItem: renderItem,
+        onSelect: function (e, term, item) {
+            trackID = item.querySelector("#track_id").innerText;
+            track_name = item.querySelector("#track_name").innerText;
+            artists = item.querySelector("#artists").innerText;
+            album_name = item.querySelector("#album_name").innerText;
+            duration_ms = item.querySelector("#duration_ms").innerText;
+            explicit = item.querySelector("#explicit").innerText === "true";
+            renewed = true;
+            addBtn.click();
+        }
+    });
+
     // Greys out buttons and destroys autocomplete object when search bar is not in focus
     $(searchBar).focusout(() => {
         if (!addedAnimationIsRunning) {
@@ -184,13 +282,12 @@ $(document).ready(() => {
             addBtn.style.color = "#999999";
             searchBar.style.backgroundColor = "#111111";
         }
-        my_autoComplete.destroy();
     });
 
     // Animation that plays when a queue is added
     function addedAnimation() {
         addedAnimationIsRunning = true;
-        addBtn.style.backgroundColor = "#1DB954";
+        $('#add-btn').css('background-color', "#1DB954");
         addBtn.style.color = "#ffffff";
         $(addBtn).animate({
             width: "100%",
@@ -264,22 +361,9 @@ $(document).ready(() => {
                 duration_ms: duration_ms,
                 curr_track_id: $('#track_name').attr('class'),
                 queue_id: queue_id,
+                add_time: Date.now()
             };
             resetTrackVars();
-            // $.ajax({
-            //     type: "POST",
-            //     url: url,
-            //     data: JSON.stringify(data),
-            //     processData: false,
-            //     contentType: 'application/json; charset=UTF-8',
-            //     dataType: 'json',
-            //     statusCode: {
-            //         204: () => {
-            //             // do something
-            //         },
-            //         404: sessionHasEnded,
-            //     }
-            // });
             socket.send(JSON.stringify(data));
             addedAnimation();
         } else {
@@ -287,21 +371,6 @@ $(document).ready(() => {
 
         }
     };
-
-    function sessionHasEnded() {
-        document.body.getElementsByClassName("row")[0].innerHTML = "<div class = \"d-flex justify-content-center pt-3 px-3 container\" style='text-align: center'>\n" +
-            "        <h1>\n" +
-            "            The queue has been terminated by the user.\n" +
-            "        </h1>\n" +
-            "    </div>\n" +
-            "\n" +
-            "    <div class = \"d-flex justify-content-center pt-3 container\">\n" +
-            "        <h5>Thank you for using Spotify Q.</h5>\n" +
-            "    </div>\n" +
-            "    <div class = \"d-flex justify-content-center container\">\n" +
-            "        <a class=\"btn btn-primary\" href=\"" + "loc.protocol" + "//\">Back</a>\n" +
-            "    </div>";
-    }
 
     // Shakes and makes the border of the search bar red
     function shakeSearchBar() {
@@ -319,10 +388,10 @@ $(document).ready(() => {
             } else
                 addBtn.style.color = '#999999';
         }, 820);
-        document.querySelector(".anim").className = "anim";
+        document.querySelector(".anim").className = "d-flex justify-content-center anim mx-3";
         window.requestAnimationFrame(function (time) {
             window.requestAnimationFrame(function (time) {
-                document.querySelector(".anim").className = "d-flex justify-content-center anim changing";
+                document.querySelector(".anim").className = "d-flex justify-content-center anim changing mx-3";
             });
         });
     }
@@ -339,28 +408,28 @@ $(document).ready(() => {
         // console.log('message', e);
         if (j.message == 'add_track_to_queue') {
             searchBar.value = "";
-
-            tbody.append(`<tr>
-                    <td>${j.track_name}
-                        <div class="artist">${j.artists}</div>
-                    </td>
-                    <td class="vote">
-                        <a href="" class="vote-up">
-                            <img src="http://${window.location.host}/static/spotifyQ/img/up.png"
-                                                              class="vote-btn vote-up"/>
-                        </a>
-                        <div class="vote-count">0</div>
-                        <a href="" class="vote-down"><img src="http://${window.location.host}/static/spotifyQ/img/down.png"
-                                                              class="vote-btn vote-down"/>
-                        </a>
-                        <div class="queue_id" style="display: none">${j.queue_id}</div>
-                    </td>
-                </tr>`);
+            let t = new Track(j.queue_id, 0, j.track_name, j.artists, j.add_time, true);
+            q.add(t);
+            q.render();
+            // tbody.append(`<tr>
+            //         <td>${j.track_name}
+            //             <div class="artist">${j.artists}</div>
+            //         </td>
+            //         <td class="vote">
+            //             <a href="" class="vote-up">
+            //                 <img src="http://${window.location.host}/static/spotifyQ/img/up.png"
+            //                                                   class="vote-btn vote-up"/>
+            //             </a>
+            //             <div class="vote-count">0</div>
+            //             <a href="" class="vote-down"><img src="http://${window.location.host}/static/spotifyQ/img/down.png"
+            //                                                   class="vote-btn vote-down"/>
+            //             </a>
+            //             <div class="queue_id" style="display: none">${j.queue_id}</div>
+            //         </td>
+            //     </tr>`);
 
 
         } else if (j.message == 'vote_update') {
-
-        } else if (j.message == 'wrong_pin') {
 
         } else if (j.message == 'update_current_playback') {
             $('#cover').attr("src", j.cover);
@@ -404,8 +473,16 @@ $(document).ready(() => {
                 statusCode: {
                     200: () => {
                         // update vote count
-                        vote_count = vote_element.getElementsByClassName("vote-count")[0];
-                        vote_count.innerHTML = parseInt(vote_count.innerHTML) + 1;
+                        // vote_count = vote_element.getElementsByClassName("vote-count")[0];
+                        // vote_count.innerHTML = parseInt(vote_count.innerHTML) + 1;
+                        q.queue.forEach((elem) => {
+                            if (elem.queue_id == queue_id) {
+                                elem.votes += 1;
+                                elem.newly_added = true;
+                            }
+                        });
+                        q.render();
+
                     },
                     403: () => {
 
@@ -425,8 +502,15 @@ $(document).ready(() => {
                 statusCode: {
                     200: () => {
                         // update vote count
-                        vote_count = vote_element.getElementsByClassName("vote-count")[0];
-                        vote_count.innerHTML = parseInt(vote_count.innerHTML) - 1;
+                        // vote_count = vote_element.getElementsByClassName("vote-count")[0];
+                        // vote_count.innerHTML = parseInt(vote_count.innerHTML) - 1;
+                        q.queue.forEach((elem) => {
+                            if (elem.queue_id == queue_id) {
+                                elem.votes -= 1;
+                                elem.newly_added = true;
+                            }
+                        });
+                        q.render();
                     },
                     403: () => {
 
@@ -437,7 +521,6 @@ $(document).ready(() => {
         }
 
     });
-    var new_expires_at;
 
     // AJAX call to server to refresh access token
     function getRefreshedAccessToken() {
@@ -462,7 +545,6 @@ $(document).ready(() => {
             setInterval(() => {
                 getRefreshedAccessToken();
             }, 60000)
-
         }, expires_at - Date.now() - 10000);
     }
 
@@ -649,15 +731,7 @@ $(document).ready(() => {
         // Not Ready
         player.addListener('not_ready', ({device_id}) => {
             console.log('Device ID has gone offline', device_id);
-            document.body.getElementsByClassName("row")[0].innerHTML = "<div class = \"d-flex justify-content-center pt-3 px-3 container\" style='text-align: center;'>\n" +
-                "        <h1>\n" +
-                "            Connection lost. Please reconnect to the internet to continue\n" +
-                "        </h1>\n" +
-                "    </div>\n" +
-                "\n" +
-                "<div class = \"d-flex justify-content-center container\">\n" +
-                "        <a class=\"btn btn-primary\" href=\"" + "loc.protocol" + "//\">Refresh</a>\n" +
-                "    </div>";
+            displayMessage("Connection lost. Please reconnect to the internet to continue");
 
         });
 
@@ -690,9 +764,7 @@ $(document).ready(() => {
             // use AJAX to play from previously played.
         };
 
-
     };
-
 
 });
 
