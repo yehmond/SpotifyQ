@@ -46,7 +46,13 @@ $(document).ready(() => {
     const searchForm = document.getElementById('search-form');
     const addBtn = document.getElementById('add-btn');
     const pin = document.getElementById("pin-code").innerText;
+    const playPauseBtn = document.getElementById("play-pause-btn");
+    const playBtn = document.getElementById("play-btn");
+    const pauseBtn = document.getElementById("pause-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const prevBtn = document.getElementById("prev-btn");
     const loc = window.location;
+    let token = $('#access_token').text();
     let track_name = '';
     let trackID = '';
     let artists = '';
@@ -56,6 +62,10 @@ $(document).ready(() => {
     let renewed = false;
     let progress_ms = 0;
     let prev_track_id = '';
+    let prev_duration = 0;
+    let device_id_ = '';
+    let paused = true;
+    let nothingPlaying = true;
     let cache = [];
     let my_autoComplete;
     let queue = [];
@@ -108,7 +118,7 @@ $(document).ready(() => {
                 },
                 statusCode: {
                     500: () => {
-                        alert('Server overloaded :( Please try again later')
+                        // needs to refresh search token;
                     }
                 }
 
@@ -149,7 +159,7 @@ $(document).ready(() => {
         my_autoComplete = new autoComplete({
             selector: 'input[name="search-bar"]',
             minChars: 2,
-            delay: 150,
+            delay: 200,
             offsetTop: 10,
             cache: true,
             source: searchTracks,
@@ -218,6 +228,16 @@ $(document).ready(() => {
         renewed = null;
     }
 
+    function generateRanString(len) {
+        // Generates a random string containing numbers and letters.
+        var text = '';
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (var i = 0; i < 32; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text
+    }
+
     // adds selected track to queue on submit
     addBtn.onclick = function (e) {
         e.preventDefault();
@@ -232,6 +252,7 @@ $(document).ready(() => {
             explicit != null &&
             renewed != null) {
             const url = loc.protocol + "//" + loc.host + "/queue/add/";
+            let queue_id = generateRanString(32);
             let data = {
                 message: 'add_track_to_queue',
                 pin: pin,
@@ -242,6 +263,7 @@ $(document).ready(() => {
                 explicit: explicit,
                 duration_ms: duration_ms,
                 curr_track_id: $('#track_name').attr('class'),
+                queue_id: queue_id,
             };
             resetTrackVars();
             // $.ajax({
@@ -258,7 +280,6 @@ $(document).ready(() => {
             //         404: sessionHasEnded,
             //     }
             // });
-
             socket.send(JSON.stringify(data));
             addedAnimation();
         } else {
@@ -318,18 +339,25 @@ $(document).ready(() => {
         // console.log('message', e);
         if (j.message == 'add_track_to_queue') {
             searchBar.value = "";
+
             tbody.append(`<tr>
                     <td>${j.track_name}
                         <div class="artist">${j.artists}</div>
                     </td>
                     <td class="vote">
-                        <a href="https://www.google.com"><img src="http://${window.location.host}/static/spotifyQ/img/up.png"
-                                                              class="vote-btn"/></a>
+                        <a href="" class="vote-up">
+                            <img src="http://${window.location.host}/static/spotifyQ/img/up.png"
+                                                              class="vote-btn vote-up"/>
+                        </a>
                         <div class="vote-count">0</div>
-                        <a href="https://www.google.com"><img src="http://${window.location.host}/static/spotifyQ/img/down.png"
-                                                              class="vote-btn"/></a>
+                        <a href="" class="vote-down"><img src="http://${window.location.host}/static/spotifyQ/img/down.png"
+                                                              class="vote-btn vote-down"/>
+                        </a>
+                        <div class="queue_id" style="display: none">${j.queue_id}</div>
                     </td>
-                </tr>`)
+                </tr>`);
+
+
         } else if (j.message == 'vote_update') {
 
         } else if (j.message == 'wrong_pin') {
@@ -362,16 +390,85 @@ $(document).ready(() => {
         searchBar.focus();
     });
 
-    // function updateHomepageContext() {
-    //     let data = {
-    //         message: 'update_current_playback',
-    //     };
-    //     socket.send(JSON.stringify(data));
-    // }
 
-    console.log($('#track_name').attr('class'));
+    $("table").on('click', (event) => {
+        if (event.target.className.includes("vote-up")) {
+            event.preventDefault();
+            let vote_element = event.target.parentElement.parentElement;
+            let queue_id = vote_element.getElementsByClassName("queue_id")[0].innerHTML;
+            $.ajax({
+                type: "POST",
+                url: loc.protocol + "//" + loc.host + "/queue/upvote/",
+                data: JSON.stringify({'queue_id': queue_id}),
+                dataType: 'json',
+                statusCode: {
+                    200: () => {
+                        // update vote count
+                        vote_count = vote_element.getElementsByClassName("vote-count")[0];
+                        vote_count.innerHTML = parseInt(vote_count.innerHTML) + 1;
+                    },
+                    403: () => {
+
+                    }
+                }
+            });
+        }
+        if (event.target.className.includes("vote-down")) {
+            event.preventDefault();
+            let vote_element = event.target.parentElement.parentElement;
+            let queue_id = vote_element.getElementsByClassName("queue_id")[0].innerHTML;
+            $.ajax({
+                type: "POST",
+                url: loc.protocol + "//" + loc.host + "/queue/downvote/",
+                data: JSON.stringify({queue_id: queue_id}),
+                dataType: 'json',
+                statusCode: {
+                    200: () => {
+                        // update vote count
+                        vote_count = vote_element.getElementsByClassName("vote-count")[0];
+                        vote_count.innerHTML = parseInt(vote_count.innerHTML) - 1;
+                    },
+                    403: () => {
+
+                    }
+                }
+
+            });
+        }
+
+    });
+    var new_expires_at;
+
+    // AJAX call to server to refresh access token
+    function getRefreshedAccessToken() {
+        $.ajax({
+            type: "GET",
+            url: loc.protocol + "//" + loc.host + "/token/refresh/",
+            data: {pin: pin},
+            statusCode: {
+                200: (e) => {
+                    token = e.access_token;
+                }
+            }
+        });
+
+    }
+
+    // Automatically refreshes access token for Spotify Web Player
+    function setRefreshTokenInterval() {
+        var expires_at = $('#expires_at').text();
+        setTimeout(() => {
+            getRefreshedAccessToken();
+            setInterval(() => {
+                getRefreshedAccessToken();
+            }, 60000)
+
+        }, expires_at - Date.now() - 10000);
+    }
+
+
     window.onSpotifyWebPlaybackSDKReady = () => {
-        var token = $('#access_token').text();
+        setRefreshTokenInterval();
         const player = new Spotify.Player({
             name: 'SpotifyQ Web Player',
             getOAuthToken: cb => {
@@ -391,100 +488,211 @@ $(document).ready(() => {
         });
         player.addListener('playback_error', ({message}) => {
             console.error(message);
+            // if no next tracks in queue
+            if (message === "Cannot perform operation; no list was loaded.") {
+                nothingPlaying = true;
+            }
         });
+
+        function flush(current_track) {
+            nothingPlaying = true;
+            $('#track_name').text("Nothing playing at the moment.");
+            $('#artists').text("Add a song to queue then press play to get started.");
+            $('#cover').attr('src', `${loc.protocol}//${loc.host}/static/spotifyQ/img/cover_placeholder.png`);
+            console.log('updating other devices when nothing is playing');
+            let data = {
+                message: 'update_current_playback',
+                track_id: current_track['id'],
+                track_name: "Nothing playing at the moment.",
+                artists: "Add a song to queue then press play to get started.",
+                album_name: 'N/A',
+                cover: `${loc.protocol}//${loc.host}/static/spotifyQ/img/cover_placeholder.png`,
+                progress_ms: 0,
+                duration_ms: 0,
+            };
+            socket.send(JSON.stringify(data));
+        }
+
+        function updateCurrentPlayback(current_track, state) {
+            console.log('updating other devices');
+            prev_track_id = current_track['id'];
+            var artists = [];
+            for (let i in current_track['artists'])
+                artists.push(current_track['artists'][i]['name']);
+            let data = {
+                message: 'update_current_playback',
+                track_id: current_track['id'],
+                track_name: current_track['name'],
+                artists: artists.join(", "),
+                album_name: current_track['album']['name'],
+                cover: current_track['album']['images'][0]['url'],
+                progress_ms: state.position,
+                duration_ms: state.duration,
+            };
+            socket.send(JSON.stringify(data));
+        }
+
+        function hasTrackInQueue() {
+            return document.getElementsByTagName("tr").length > 0;
+        }
+
+        function playNothing() {
+            $.ajax({
+                type: "POST",
+                url: loc.protocol + "//" + loc.host + "/queue/flush/",
+                data: JSON.stringify({pin: pin, device_id: device_id_}),
+                dataType: 'json'
+            });
+        }
+
+
+        function playNextSong() {
+            nothingPlaying = false;
+            $.ajax({
+                type: "POST",
+                url: loc.protocol + "//" + loc.host + "/queue/next/",
+                data: JSON.stringify({pin: pin, device_id: device_id_}),
+                dataType: 'json',
+                statusCode: {
+                    200: (e) => {
+                        // signal server that song has started playing and delete currently playing song from db
+                        $.ajax({
+                            type: "POST",
+                            url: loc.protocol + "//" + loc.host + "/queue/played/",
+                            data: JSON.stringify({queue_id: e.queue_id}),
+                            dataType: 'json',
+                            error: (e) => {
+                                console.log(e);
+                            },
+                            statusCode: {
+                                204: () => {
+                                    if ($("tr").get(0))
+                                        document.getElementsByTagName("tr")[0].remove();
+                                }
+                            }
+                        });
+                    },
+                    500: () => {
+                        alert('Server overloaded :( Please try again later')
+                    },
+                    404: (e) => {
+                        alert('No track currently in queue!')
+                    }
+                }
+
+            });
+        }
 
         // Playback status updates
         player.addListener('player_state_changed', (state) => {
             // console.log('Currently Playing', current_track);
-            console.log('playback state change');
             if (state) {
                 var current_track = state.track_window.current_track;
 
-                // if at the end of the song, play next song
-                if (state.duration - state.position <= 1000) {
-                    player.pause().then(() => {
-                        console.log('paused')
-                    });
-                    playNextSong();
+                // change playPause btn
+                if (state.paused) {
+                    paused = true;
+                    pauseBtn.style.display = 'none';
+                    playBtn.style.display = 'inline';
+                } else {
+                    paused = false;
+                    pauseBtn.style.display = 'inline';
+                    playBtn.style.display = 'none';
+                    nothingPlaying = false;
+                }
+                // Update current playback on other devices on ws
+
+                // Current song has ended
+                if (state.paused === true && state.position === 0 && state.duration > 0) {
+                    if (hasTrackInQueue()) {
+                        playNextSong();
+                    } else {
+                        playNothing();
+                        flush(current_track);
+                    }
                 }
 
-                // if track has changed, then update the other devices
-                if (prev_track_id != current_track['id']) {
-                    console.log('updating other devices');
-                    prev_track_id = current_track['id'];
-                    var artists = [];
-                    for (let i in current_track['artists'])
-                        artists.push(current_track['artists'][i]['name']);
-                    let data = {
-                        message: 'update_current_playback',
-                        track_id: current_track['id'],
-                        track_name: current_track['name'],
-                        artists: artists.join(", "),
-                        album_name: current_track['album']['name'],
-                        cover: current_track['album']['images'][0]['url'],
-                        progress_ms: state.position,
-                        duration_ms: state.duration,
-                    };
-                    socket.send(JSON.stringify(data));
+                // start of new song -> consider putting updateCurrentPlayback inside or outside depending on
+                // how often I want to update the devices
+                if (state && state.paused === false && state.duration > 0 && state.position === 0) {
+                    // console.log('Started new song');
+                    updateCurrentPlayback(current_track, state);
                 }
+
+
             }
-
-
         });
 
         // Ready
         player.addListener('ready', ({device_id}) => {
-            console.log('Ready with Device ID', device_id)
+            console.log('Ready with Device ID', device_id);
+            device_id_ = device_id;
+            $.ajax({
+                type: "POST",
+                url: loc.protocol + "//" + loc.host + "/queue/device_id/",
+                data: JSON.stringify({pin: pin, device_id: device_id}),
+                dataType: 'json',
+                success: (res) => {
+                },
+                statusCode: {
+                    500: () => {
+
+                    },
+                    404: () => {
+
+                    }
+                }
+            });
 
         });
 
         // Not Ready
         player.addListener('not_ready', ({device_id}) => {
             console.log('Device ID has gone offline', device_id);
+            document.body.getElementsByClassName("row")[0].innerHTML = "<div class = \"d-flex justify-content-center pt-3 px-3 container\" style='text-align: center;'>\n" +
+                "        <h1>\n" +
+                "            Connection lost. Please reconnect to the internet to continue\n" +
+                "        </h1>\n" +
+                "    </div>\n" +
+                "\n" +
+                "<div class = \"d-flex justify-content-center container\">\n" +
+                "        <a class=\"btn btn-primary\" href=\"" + "loc.protocol" + "//\">Refresh</a>\n" +
+                "    </div>";
+
         });
 
         // Connect to the player!
         player.connect();
+
+        playPauseBtn.onclick = function (e) {
+            if (nothingPlaying && hasTrackInQueue()) {
+                playNextSong();
+            }
+            // paused
+            if (paused && !nothingPlaying) {
+                player.resume();
+            }
+            // playing
+            else {
+                player.pause();
+            }
+        };
+
+        nextBtn.onclick = function (e) {
+            if (hasTrackInQueue()) {
+                playNextSong();
+            } else {
+                player.nextTrack();
+            }
+        };
+
+        prevBtn.onclick = function (e) {
+            // use AJAX to play from previously played.
+        };
+
+
     };
 
 
-    function playNextSong() {
-        console.log('trying to play next song');
-        $.ajax({
-            type: "POST",
-            url: loc.protocol + "//" + loc.host + "/queue/next/",
-            data: JSON.stringify({pin: pin}),
-            dataType: 'json',
-            success: (res) => {
-                console.log('Playing next song');
-                if ($("tr").get(0))
-                    $("tr").get(0).remove();
-                queue = res.queue;
-                // signal server that song has started playing and delete currently playing song from db
-                if (queue.length != 0) {
-                    $.ajax({
-                        type: "POST",
-                        url: loc.protocol + "//" + loc.host + "/queue/played/",
-                        data: JSON.stringify({_uuid: queue[0]}),
-                        dataType: 'json'
-                    })
-                }
-
-            },
-            statusCode: {
-                500: () => {
-                    alert('Server overloaded :( Please try again later')
-                },
-                404: () => {
-
-                }
-            }
-
-        })
-    }
-
-
 });
-
-
 

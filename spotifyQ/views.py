@@ -9,12 +9,14 @@ from django.shortcuts import render, redirect, reverse, get_object_or_404
 from .forms import PINForm
 from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get_spotify_owner_id, \
     get_homepage_context, try_create_owner, add_song_to_queue, upvote_track, downvote_track, \
-    get_search_token, SEARCH_TOKEN, get_current_track, transfer_playback, fetch_devices, play_next_track, delete_current_track
+    get_search_token, play_next_track, delete_current_track, play_nothing, refresh_access_token
 
 # Create your views here.
 
 STATE_KEY = 'spotify_auth_state'
 REDIRECT_URI = 'http://127.0.0.1:8000/callback'
+SEARCH_TOKEN = get_search_token()
+
 # REDIRECT_URI = 'http://192.168.86.222:8000/callback'
 
 
@@ -45,7 +47,7 @@ def index(request):
             return redirect(reverse('verify_pin'))
     else:
         form = PINForm()
-
+        request.session['votes'] = {'queue_id': 'queue_id'}
     return render(request, 'spotifyQ/index.html', {'form': form})
 
 
@@ -90,7 +92,6 @@ def owner(request):
         if context == '-1':
             del request.session['owner_id']
             return render(request, 'spotifyQ/session_has_ended.html')
-
         return render(request, 'spotifyQ/owner.html', context=context)
 
     else:
@@ -245,38 +246,76 @@ def queue_add(request):
 
 
 def queue_upvote(request):
-    if not request.is_ajax() or request.method != 'PUT':
+    if not request.is_ajax() or request.method != 'POST':
         return JsonResponse({'error': 'incorrect request method'}, status=403)
     try:
         j = json.loads(request.body)
-        _uuid = j['_uuid']
+        queue_id = j['queue_id']
 
-        res = upvote_track(_uuid)
-
-        if res is False:
-            return JsonResponse({'error': 'no track associated with provided UUID'}, status=404)
-
-        return HttpResponse(status=204)
+        # if the user has never voted on this track before
+        if request.session['votes'].get(queue_id) is None:
+            votes = request.session['votes']
+            votes[queue_id] = 1
+            request.session['votes'] = votes
+            res = upvote_track(queue_id)
+            return JsonResponse({'votes': request.session['votes']}, status=200)
+        else:
+            if request.session['votes'][queue_id] < 1:
+                votes = request.session['votes']
+                votes[queue_id] += 1
+                request.session['votes'] = votes
+                res = upvote_track(queue_id)
+                return JsonResponse({'votes': request.session['votes']}, status=200)
+            else:
+                return JsonResponse({'votes': request.session['votes']}, status=403)
 
     except KeyError:
         return JsonResponse({'error': 'malformed syntax'}, status=400)
 
 
 def queue_downvote(request):
-    if not request.is_ajax() or request.method != 'PUT':
+    if not request.is_ajax() or request.method != 'POST':
         return JsonResponse({'error': 'incorrect request method'}, status=403)
     try:
         j = json.loads(request.body)
-        _uuid = j['_uuid']
+        queue_id = j['queue_id']
 
-        res = downvote_track(_uuid)
-        if res is False:
-            return JsonResponse({'error': 'no track associated with provided UUID'}, status=404)
-
-        return HttpResponse(status=204)
+        # if the user has never voted on this track before
+        if request.session['votes'].get(queue_id) is None:
+            votes = request.session['votes']
+            votes[queue_id] = -1
+            request.session['votes'] = votes
+            res = downvote_track(queue_id)
+            return JsonResponse({'votes': request.session['votes']}, status=200)
+        else:
+            if request.session['votes'][queue_id] > -1:
+                votes = request.session['votes']
+                votes[queue_id] -= 1
+                request.session['votes'] = votes
+                res = downvote_track(queue_id)
+                return JsonResponse({'votes': request.session['votes']}, status=200)
+            else:
+                return JsonResponse({'votes': request.session['votes']}, status=403)
 
     except KeyError:
         return JsonResponse({'error': 'malformed syntax'}, status=400)
+
+
+def queue_flush(request):
+    if not request.is_ajax() or request.method != 'POST':
+        return JsonResponse({'error': 'incorrect request method'}, status=403)
+    try:
+        j = json.loads(request.body)
+        pin = j['pin']
+        device_id = j['device_id']
+        res = play_nothing(pin, device_id)
+        if res == '-1':
+            return JsonResponse({'error': 'no tracks currently in queue'}, status=404)
+        return JsonResponse({'queue_id': res}, status=200)
+
+    except KeyError:
+        return JsonResponse({'error': 'malformed syntax'}, status=400)
+
 
 
 def queue_next(request):
@@ -285,10 +324,11 @@ def queue_next(request):
     try:
         j = json.loads(request.body)
         pin = j['pin']
-        res = play_next_track(pin)
-        if res is False:
-            return JsonResponse({'error': 'no user associated with this pin'}, status=404)
-        return JsonResponse({'queue': res}, status=200)
+        device_id = j['device_id']
+        res = play_next_track(pin, device_id)
+        if res == '-1':
+            return JsonResponse({'error': 'no tracks currently in queue'}, status=404)
+        return JsonResponse({'queue_id': res}, status=200)
 
     except KeyError:
         return JsonResponse({'error': 'malformed syntax'}, status=400)
@@ -300,10 +340,27 @@ def queue_played(request):
         return JsonResponse({'error': 'incorrect request method'}, status=403)
     try:
         j = json.loads(request.body)
-        _uuid = j['_uuid']
-        res = delete_current_track(_uuid)
+        queue_id = j['queue_id']
+        res = delete_current_track(queue_id)
         if res is False:
             return JsonResponse({'error': 'no user associated with this pin'}, status=404)
+        return HttpResponse(status=204)
+
+    except KeyError:
+        return JsonResponse({'error': 'malformed syntax'}, status=400)
+
+
+def queue_device_id(request):
+    """Called by the user when the Spotify Webplayer is ready"""
+    if not request.is_ajax() or request.method != 'POST':
+        return JsonResponse({'error': 'incorrect request method'}, status=403)
+    try:
+        j = json.loads(request.body)
+        pin = j['pin']
+        device_id = j['device_id']
+        o = Owner.objects.get(pin=pin)
+        o.device_id = device_id
+        o.save()
         return HttpResponse(status=204)
 
     except KeyError:
@@ -347,7 +404,6 @@ def verify(request):
 
 
 def test(request):
-    play_next_track('RJBV')
     return render(request, 'spotifyQ/test_button_inside_input.html')
 
 
@@ -376,6 +432,20 @@ def search_tracks(request):
 
     except ConnectionResetError:
         pass
+
+
+def get_refreshed_access_token(request):
+    if not request.is_ajax() or request.method != 'GET':
+        return JsonResponse({'error': 'incorrect request method'}, status=403)
+    try:
+        pin = request.GET['pin']
+        o = Owner.objects.get(pin=pin)
+        access_token = refresh_access_token(o.refresh_token, o.owner_id)
+        expires_at = Owner.objects.get(pin=pin).expires_at
+        return JsonResponse({'access_token': access_token}, status=200)
+    except KeyError:
+        return JsonResponse({'error': 'malformed syntax'}, status=400)
+
 
 
 

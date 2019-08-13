@@ -32,8 +32,8 @@
     border-radius: 10px;
     width: 75%;
     height: 75%;
-    max-width: 500px;
-    max-height: 500px;
+    max-width: 400px;
+    max-height: 400px;
     -webkit-box-shadow: 0px 5px 34px 0px rgba(0, 0, 0, 0.23);
     -moz-box-shadow: 0px 5px 34px 0px rgba(0, 0, 0, 0.23);
     box-shadow: 0px 5px 34px 0px rgba(0, 0, 0, 0.23);
@@ -64,6 +64,34 @@ body {
 #pin-btn {
     margin-bottom: 55px;
 }
+
+#music-control {
+    position: relative;
+
+}
+
+#play-pause-btn {
+    position: relative;
+    left: 0;
+    right: 0;
+}
+#play-btn{
+    margin-left: 3px;
+    margin-right: -3px;
+}
+
+#prev-btn-div {
+    position: absolute;
+    right: 80px;
+    top: 0px;
+}
+
+#next-btn-div {
+    position: absolute;
+    left: 80px;
+    top: 0px;
+}
+
 
 #queue {
     color: #ffffff;

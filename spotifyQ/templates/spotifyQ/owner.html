@@ -72,18 +72,45 @@
         </div>
         <div class="d-flex justify-content-center mt-3">
             <p>
-                <strong id="track_name" class="{{ track_id }}">{{ track_name | default:"Nothing playing at the moment" }}</strong>
+                <strong id="track_name"
+                        class="{{ track_id }}">{{ track_name | default:"Nothing playing at the moment." }}</strong>
                 <br>
                 <span id="artists">
                 {% if artists != None %}
                     {{ artists }}
                 {% else %}
-                    Click the button below to get started
+                    Add a song to queue then press play to get started.
                 {% endif %}
                 </span>
             </p>
         </div>
-        <div>
+        <div class="d-flex justify-content-center">
+
+            <div id="music-control">
+                <div id="prev-btn-div">
+                    <button id="prev-btn" class="btn" href=""><img
+                            src="{% static 'spotifyQ/img/prev-track-button.png' %}"
+                            width="40px"
+                            height="40px">
+                    </button>
+                </div>
+                <button class="btn" href="" id="play-pause-btn">
+                    <img id="play-btn" src="{% static 'spotifyQ/img/play-arrow.png' %}" width="40px">
+                    <img id="pause-btn" style="display: none" src="{% static 'spotifyQ/img/pause-button.png' %}"
+                         width="40px" height="40px">
+                </button>
+                <div id="next-btn-div">
+                    <button id="next-btn" class="btn" href=""><img
+                            src="{% static 'spotifyQ/img/next-track-button.png' %}"
+                            width="40px"
+                            height="40px">
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+        <div class="d-flex justify-content-center mt-3">
             <button class="btn btn-primary" id="add-a-song-to-queue-btn">Add a Song to Queue</button>
         </div>
         <div>
@@ -113,15 +140,18 @@
                 <tbody>
                 {% for q in queue %}
                     <tr>
-                        <td> {{ q.track_name }}
+                        <td>
+                            {{ q.track_name }}
                             <div class="artist">{{ q.artists }}</div>
                         </td>
                         <td class="vote">
-                            <a href="https://www.google.com"><img src="{% static 'spotifyQ/img/up.png' %}"
-                                                                  class="vote-btn"/></a>
+                            <a href="" class="vote-up">
+                                <img src="{% static 'spotifyQ/img/up.png' %}"
+                                     class="vote-btn vote-up"/></a>
                             <div class="vote-count">{{ q.votes }}</div>
-                            <a href="https://www.google.com"><img src="{% static 'spotifyQ/img/down.png' %}"
-                                                                  class="vote-btn"/></a>
+                            <a href="" class="vote-down"><img src="{% static 'spotifyQ/img/down.png' %}"
+                                            class="vote-btn vote-down"/></a>
+                            <div class="queue_id" style="display: none">{{ q.queue_id }}</div>
                         </td>
                     </tr>
                 {% endfor %}
@@ -131,6 +161,7 @@
     </div>
 </div>
 <div id="access_token" style="display: none">{{ access_token }}</div>
+<div id="expires_at" style="display: none">{{ expires_at }}</div>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://sdk.scdn.co/spotify-player.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>

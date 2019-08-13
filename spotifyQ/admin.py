@@ -4,7 +4,7 @@ from .models import Owner,Queue
 
 
 class QueueAdmin(admin.ModelAdmin):
-    readonly_fields = ('_uuid',)
+    readonly_fields = ('queue_id',)
 
 
 admin.site.register(Owner)
