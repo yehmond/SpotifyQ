@@ -283,7 +283,7 @@ def get_homepage_context(**kwargs):
 
 
 def get_queue(context, owner_id):
-    q = Queue.objects.filter(owner_id=owner_id).order_by('-votes')
+    q = Queue.objects.filter(owner_id=owner_id).order_by('-votes', 'add_time')
     context['queue'] = list(q)
     context['existing_queue'] = serialize('json', q)
 

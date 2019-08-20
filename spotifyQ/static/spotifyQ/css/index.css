@@ -38,6 +38,11 @@ body {
     border-radius: 20px;
     border-color: #ebebeb;
     text-transform: uppercase;
+    outline: none;
+}
+
+#pin-box:focus {
+    box-shadow: 0 0 3pt 2pt #007bff;
 }
 
 #enter {
@@ -47,8 +52,20 @@ body {
 
 #spotify {
     background-color: #1DB954;
+    border: solid 1px #1DB954;
     color: #ffffff;
     width: 85%;
+
+}
+
+#spotify:hover {
+    background-color: #1ED75F;
+    border: solid 1px #1ED75F;
+}
+
+#spotify:focus {
+    background-color: #1AA34A;
+    border: solid 1px #1AA34A;
 }
 
 .changing {

@@ -2,26 +2,12 @@
     padding: 7px 12px 7px 12px;
 }
 
-#exit-btn {
-
-}
-
-.card {
-    margin-top: 10px;
-}
-
-#close-btn {
-    position: absolute;
-    top: 3px;
-    right: 10px;
-    margin: 0px 0px 13px 13px;
-
-}
-
 #pin-code {
-    margin-top: 5px;
-    margin-bottom: 0;
+    color: black;
     font-family: "Lucida Console", Monaco, monospace;
+    border: black solid 2px;
+    border-radius: 5px;
+    padding: 0px 2px 0px 3px;
 }
 
 .btn {

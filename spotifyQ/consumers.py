@@ -47,9 +47,6 @@ class QueueConsumer(AsyncConsumer):
                     'queue_id': d['queue_id'],
                     'add_time': d['add_time']
                 }
-                # Broadcasts the message event to be sent
-                await self.channel_layer.group_send(self.pin, data)
-
             elif d['message'] == 'update_current_playback':
                 data = {
                     'type': 'pin.update_current_playback',
@@ -61,23 +58,24 @@ class QueueConsumer(AsyncConsumer):
                     'cover': d['cover'],
                     'progress_ms': d['progress_ms'],
                     'duration_ms': d['duration_ms'],
+                    'paused': d['paused'],
                 }
-                await self.channel_layer.group_send(self.pin, data)
+            elif d['message'] == 'update_vote':
+                data = {
+                    'type': 'pin.update_vote',
+                    'message': 'update_vote',
+                    'queue_id': d['queue_id'],
+                    'votes': d['votes'],
+                }
+            else:
+                # d['message'] == 'next_song':
+                data = {
+                    'type': 'pin.next_song',
+                    'message': 'next_song',
+                }
 
-            elif d['message'] == 'upvote':
-                data = {
-                    'type': 'pin.upvote',
-                    'message': 'upvote',
-                    'queue_id': d['queue_id']
-                }
-                await self.channel_layer.group_send(self.pin, data)
-            elif d['message'] == 'downvote':
-                data = {
-                    'type': 'pin.downvote',
-                    'message': 'downvote',
-                    'queue_id': d['queue_id']
-                }
-                await self.channel_layer.group_send(self.pin, data)
+            # Broadcasts the message event to be sent
+            await self.channel_layer.group_send(self.pin, data)
 
     # Handling function that broadcasts whenever someone adds a track to queue
     async def pin_add_track_to_queue(self, event):
@@ -106,25 +104,26 @@ class QueueConsumer(AsyncConsumer):
                 'album_name': event['album_name'],
                 'cover': event['cover'],
                 'progress_ms': event['progress_ms'],
-                'duration_ms': event['duration_ms']
+                'duration_ms': event['duration_ms'],
+                'paused': event['paused']
             })
         })
 
-    async def pin_upvote(self, event):
+    async def pin_update_vote(self, event):
         await self.send({
             'type': 'websocket.send',
             'text': json.dumps({
                 'message': event['message'],
                 'queue_id': event['queue_id'],
+                'votes': event['votes'],
             })
         })
 
-    async def pin_downvote(self, event):
+    async def pin_next_song(self, event):
         await self.send({
             'type': 'websocket.send',
             'text': json.dumps({
                 'message': event['message'],
-                'queue_id': event['queue_id'],
             })
         })
 

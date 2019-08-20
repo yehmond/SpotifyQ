@@ -62,14 +62,14 @@ def guest(request):
         request.session['pin'] = pin
     else:
         return redirect(reverse('index'))
-
     context = get_homepage_context(pin=pin)
 
     # When owner has terminated queue session but guest remains on guest homepage
     if context == '-1':
         del request.session['pin']
         return render(request, 'spotifyQ/session_has_ended.html')
-
+    context['vote_limit'] = request.session['votes']
+    print(request.session.session_key)
     return render(request, 'spotifyQ/guest.html', context=context)
 
 
@@ -92,6 +92,7 @@ def owner(request):
         if context == '-1':
             del request.session['owner_id']
             return render(request, 'spotifyQ/session_has_ended.html')
+        context['vote_limit'] = request.session['votes']
         return render(request, 'spotifyQ/owner.html', context=context)
 
     else:

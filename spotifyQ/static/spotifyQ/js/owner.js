@@ -1,70 +1,180 @@
 $(document).ready(() => {
-    const queueElem = $("tbody");
-
     class Track {
-        constructor(queue_id, votes, track_name, artists, add_time, newly_added) {
-            this.queue_id = queue_id;
-            this.votes = votes;
-            this.track_name = track_name;
-            this.artists = artists;
-            this.add_time = add_time;
-            this.newly_added = newly_added;
+
+        constructor(queue_id, track_id, votes, track_name, artists, add_time, newly_added, vote_limit) {
+            this._queue_id = queue_id;
+            this._track_id = track_id;
+            this._votes = votes;
+            this._track_name = track_name;
+            this._artists = artists;
+            this._add_time = add_time;
+            this._newly_added = newly_added;
+            this._vote_limit = vote_limit;
         }
+
+        get queue_id() {
+            return this._queue_id;
+        }
+
+        set queue_id(id) {
+            this._queue_id = id;
+        }
+
+        get track_id() {
+            return this._track_id;
+        }
+
+        set track_id(id) {
+            this._track_id = id;
+        }
+
+        get votes() {
+            return this._votes;
+        }
+
+        set votes(v) {
+            this._votes = v;
+        }
+
+        get track_name() {
+            return this._track_name;
+        }
+
+        set track_name(track_name) {
+            this._track_name = track_name;
+        }
+
+        get artists() {
+            return this._artists;
+        }
+
+        set artists(a) {
+            this._artists = a;
+        }
+
+        get add_time() {
+            return this._add_time;
+        }
+
+        set add_time(t) {
+            this._add_time = t;
+        }
+
+        get newly_added() {
+            return this._newly_added
+        }
+
+        set newly_added(b) {
+            this._newly_added = b;
+        }
+
+        get vote_limit() {
+            return this._vote_limit;
+        }
+
+        set vote_limit(v) {
+            this._vote_limit = v;
+        }
+
 
     }
 
-    class Queue {
+    class PriorityQueue {
         constructor() {
-            this.queue = []
+            this.tracks = []
         }
 
-        add(track) {
-            this.queue.push(track);
+        enqueue(track) {
+            let added = false;
+            for (let i = this.tracks.length - 1; i >= 0; i--) {
+                if (this.tracks[i].votes === track.votes && this.tracks[i].add_time <= track.add_time) {
+                    this.tracks.splice(i + 1, 0, track);
+                    added = true;
+                    break;
+                }
+                if (this.tracks[i].votes > track.votes && !added) {
+                    this.tracks.splice(i + 1, 0, track);
+                    added = true;
+                    break;
+                }
+            }
+
+            if (!added) {
+                this.tracks.unshift(track);
+            }
         }
 
-        remove() {
-            this.queue.pop();
+        dequeue() {
+            if (this.tracks.length > 0)
+                return this.tracks.shift();
+            else
+                return -1;
+        }
+
+        front() {
+            if (this.tracks.length > 0)
+                return this.tracks[0];
+            else
+                return -1;
         }
 
         sort() {
-            this.queue.sort((a, b) => {
+            this.tracks.sort((a, b) => {
                 if (a.votes < b.votes) return 1;
                 if (a.votes > b.votes) return -1;
                 if (a.add_time > b.add_time) return 1;
                 if (a.add_time < b.add_time) return -1;
             });
-            return this.queue;
         }
 
         render() {
             this.sort();
             var tRow = '';
-            this.queue.forEach((elem) => {
+            this.tracks.forEach((elem) => {
                 if (elem.newly_added) {
-                    tRow += `<tr id="newly_added">`;
-                    elem.newly_added = false;
+                    tRow += `<tr id="newly_added" class="${elem.queue_id}" >`;
+                    elem._newly_added = false;
                 } else {
-                    tRow += `<tr>`;
+                    tRow += `<tr class="${elem.queue_id}">`;
                 }
                 tRow += `<td>
                             ${elem.track_name}
                             <div class="artist">${elem.artists}</div>
                         </td>
-                        <td class="vote">
-                        <a href="" class="vote-up">
-                            <img src="http://${window.location.host}/static/spotifyQ/img/up.png" class="vote-btn vote-up"/>
+                        <td class="vote">`;
+                if (elem.vote_limit === 1)
+                    tRow += `<a href="" class="vote-up disabled">`;
+                else
+                    tRow += `<a href="" class="vote-up">`;
+
+                tRow += `<img src="/static/spotifyQ/img/up.png" class="vote-btn vote-up"/>
                         </a>
-                        <div class="vote-count">${elem.votes}</div>
-                        <a href="" class="vote-down">
-                            <img src="http://${window.location.host}/static/spotifyQ/img/down.png" class="vote-btn vote-down"/>
+                        <div class="vote-count">${elem.votes}</div> `;
+                if (elem.vote_limit === -1)
+                    tRow += `<a href="" class="vote-down disabled">`;
+                else
+                    tRow += `<a href="" class="vote-down">`;
+                tRow += `<img src="/static/spotifyQ/img/down.png" class="vote-btn vote-down"/>
                         </a>
-                        <div class="queue_id" style="display: none">${elem.queue_id}</div>
                     </td>
                     </tr>`;
             });
-            queueElem.html(tRow);
-            $("#newly_added").effect("highlight", 1200);
-            $("#newly_added").attr('id', '');
+            $("tbody").html(tRow);
+            setTimeout(() => {
+                $("#newly_added").effect("highlight", 1200);
+                $("#newly_added").attr('id', '');
+            }, 200);
+            $(".vote-up").hover((v) => {
+                $(v.currentTarget).attr('src', '/static/spotifyQ/img/up-hover.png')
+            }, (v) => {
+                $(v.currentTarget).attr('src', '/static/spotifyQ/img/up.png')
+            });
+
+            $(".vote-down").hover((v) => {
+                $(v.currentTarget).attr('src', '/static/spotifyQ/img/down-hover.png')
+            }, (v) => {
+                $(v.currentTarget).attr('src', '/static/spotifyQ/img/down.png')
+            });
         }
     }
 
@@ -118,11 +228,10 @@ $(document).ready(() => {
     const playBtn = document.getElementById("play-btn");
     const pauseBtn = document.getElementById("pause-btn");
     const nextBtn = document.getElementById("next-btn");
-    const prevBtn = document.getElementById("prev-btn");
     const loc = window.location;
     let token = $('#access_token').text();
     let track_name = '';
-    let trackID = '';
+    let track_id = '';
     let artists = '';
     let album_name = '';
     let duration_ms = 0;
@@ -137,19 +246,26 @@ $(document).ready(() => {
     let cache = [];
     let my_autoComplete;
     let addedAnimationIsRunning = false;
-    let q = new Queue();
+    let q = new PriorityQueue();
+    let current_track_duration = 0;
+    let current_track_position = 0;
+    let progressBarTimer;
 
     function parseExistingQueue() {
         existing_queue.forEach((elem) => {
             let queue_id = elem.fields.queue_id;
+            let track_id = elem.fields.track_id;
             let votes = elem.fields.votes;
             let track_name = elem.fields.track_name;
             let artists = elem.fields.artists;
-            let add_time = elem.fields.add_time;
-            let t = new Track(queue_id, votes, track_name, artists, add_time);
-            q.add(t);
+            let add_time = new Date(elem.fields.add_time).getTime();
+            let limit = vote_limit[queue_id];
+            if (limit == undefined)
+                limit = 0;
+            let t = new Track(queue_id, track_id, votes, track_name, artists, add_time, false, limit);
+            q.enqueue(t);
         });
-        console.log(q);
+        q.render();
     }
 
     parseExistingQueue();
@@ -162,7 +278,7 @@ $(document).ready(() => {
             var album_name = res["tracks"]["items"][i]["album"]["name"];
             var artists = "";
             for (var j in res["tracks"]["items"][i]["artists"]) {
-                if (j == 0)
+                if (j === "0")
                     artists += (res["tracks"]["items"][i]["artists"][j]["name"]);
                 else
                     artists += ", " + (res["tracks"]["items"][i]["artists"][j]["name"]);
@@ -220,7 +336,7 @@ $(document).ready(() => {
             "    </div>\n" +
             "\n" +
             "<div class = \"d-flex justify-content-center container\">\n" +
-            "        <a class=\"btn btn-primary\" href=\"" + "loc.protocol" + "//\">Refresh</a>\n" +
+            "        <a class=\"btn btn-primary\" href=\"" + loc.protocol + "//" + loc.host + "\">Refresh</a>\n" +
             "    </div>";
     }
 
@@ -264,7 +380,7 @@ $(document).ready(() => {
         source: searchTracks,
         renderItem: renderItem,
         onSelect: function (e, term, item) {
-            trackID = item.querySelector("#track_id").innerText;
+            track_id = item.querySelector("#track_id").innerText;
             track_name = item.querySelector("#track_name").innerText;
             artists = item.querySelector("#artists").innerText;
             album_name = item.querySelector("#album_name").innerText;
@@ -317,7 +433,7 @@ $(document).ready(() => {
     // Resets track variables to ensure previous track is not added instead of the selected track due to async
     function resetTrackVars() {
         track_name = '';
-        trackID = '';
+        track_id = '';
         artists = '';
         album_name = '';
         duration_ms = 0;
@@ -342,7 +458,7 @@ $(document).ready(() => {
         // If searchBar.value doesn't only contain empty string or whitespaces
         if (!/^\s*$/.test(searchBar.value) &&
             track_name != '' &&
-            trackID != '' &&
+            track_id != '' &&
             artists != '' &&
             album_name != '' &&
             duration_ms != 0 &&
@@ -354,18 +470,22 @@ $(document).ready(() => {
                 message: 'add_track_to_queue',
                 pin: pin,
                 track_name: track_name,
-                track_id: trackID,
+                track_id: track_id,
                 artists: artists,
                 album_name: album_name,
                 explicit: explicit,
                 duration_ms: duration_ms,
                 curr_track_id: $('#track_name').attr('class'),
                 queue_id: queue_id,
-                add_time: Date.now()
+                add_time: Date.now(),
             };
+            let t = new Track(queue_id, track_id, 0, track_name, artists, Date.now(), true, 0);
+            q.enqueue(t);
+            q.render();
             resetTrackVars();
             socket.send(JSON.stringify(data));
             addedAnimation();
+            searchBar.value = "";
         } else {
             shakeSearchBar();
 
@@ -404,40 +524,43 @@ $(document).ready(() => {
     var endpoint = wsStart + loc.host + '/' + pin;
     var socket = new ReconnectingWebSocket(endpoint);
     socket.onmessage = function (e) {
-        j = JSON.parse(e.data);
+        let j = JSON.parse(e.data);
         // console.log('message', e);
-        if (j.message == 'add_track_to_queue') {
-            searchBar.value = "";
-            let t = new Track(j.queue_id, 0, j.track_name, j.artists, j.add_time, true);
-            q.add(t);
+        if (j.message == "add_track_to_queue") {
+            console.log("added track to queue");
+            if (!q.tracks.some(elem => elem.queue_id == j.queue_id)) {
+                let t = new Track(j.queue_id, j.track_id, 0, j.track_name, j.artists, j.add_time, true, 0);
+                q.enqueue(t);
+                q.render();
+            }
+        } else if (j.message == "update_vote") {
+            let t = q.tracks.find((e) => {
+                return e.queue_id == j.queue_id
+            });
+            t.votes = j.votes;
             q.render();
-            // tbody.append(`<tr>
-            //         <td>${j.track_name}
-            //             <div class="artist">${j.artists}</div>
-            //         </td>
-            //         <td class="vote">
-            //             <a href="" class="vote-up">
-            //                 <img src="http://${window.location.host}/static/spotifyQ/img/up.png"
-            //                                                   class="vote-btn vote-up"/>
-            //             </a>
-            //             <div class="vote-count">0</div>
-            //             <a href="" class="vote-down"><img src="http://${window.location.host}/static/spotifyQ/img/down.png"
-            //                                                   class="vote-btn vote-down"/>
-            //             </a>
-            //             <div class="queue_id" style="display: none">${j.queue_id}</div>
-            //         </td>
-            //     </tr>`);
+            $(`.${j.queue_id}`).find(".vote-count").text(j.votes);
+            $(`.${j.queue_id}`).find(".vote-count").effect("highlight", 800);
+            // $(`.${j.queue_id}`).effect("highlight", 800);
 
-
-        } else if (j.message == 'vote_update') {
-
-        } else if (j.message == 'update_current_playback') {
+        } else if (j.message === "update_current_playback") {
             $('#cover').attr("src", j.cover);
             $('#artists').text(j.artists);
             $('#track_name').text(j.track_name);
             $('#track_name').attr('class', j.track_id);
-            duration_ms = j.duration_ms;
-            progress_ms = j.progress_ms;
+            current_track_duration = j.duration_ms;
+            current_track_position = j.progress_ms;
+            clearInterval(progressBarTimer);
+            if (!j.paused) {
+                progressBarTimer = setInterval(() => {
+                    updateProgressBar();
+                }, 500);
+            }
+
+            console.log("updating playback");
+        } else if (j.message == "next_song") {
+            q.dequeue();
+            q.render();
         }
 
     };
@@ -459,65 +582,86 @@ $(document).ready(() => {
         searchBar.focus();
     });
 
+    function updateProgressBar() {
+        current_track_position += 500;
+        $(".progress-bar")[0].style.width = (current_track_position / current_track_duration * 100).toString() + "%";
+    }
 
     $("table").on('click', (event) => {
         if (event.target.className.includes("vote-up")) {
             event.preventDefault();
-            let vote_element = event.target.parentElement.parentElement;
-            let queue_id = vote_element.getElementsByClassName("queue_id")[0].innerHTML;
-            $.ajax({
-                type: "POST",
-                url: loc.protocol + "//" + loc.host + "/queue/upvote/",
-                data: JSON.stringify({'queue_id': queue_id}),
-                dataType: 'json',
-                statusCode: {
-                    200: () => {
-                        // update vote count
-                        // vote_count = vote_element.getElementsByClassName("vote-count")[0];
-                        // vote_count.innerHTML = parseInt(vote_count.innerHTML) + 1;
-                        q.queue.forEach((elem) => {
-                            if (elem.queue_id == queue_id) {
-                                elem.votes += 1;
-                                elem.newly_added = true;
+            let vote_element = event.target.parentElement.parentElement.parentElement;
+            let queue_id = vote_element.className;
+            for (let i = 0; i < q.tracks.length; i++) {
+                if (q.tracks[i].queue_id == queue_id && q.tracks[i].vote_limit < 1) {
+                    q.tracks[i].votes += 1;
+                    var votes = q.tracks[i].votes;
+                    q.tracks[i].vote_limit += 1;
+                    q.tracks[i].newly_added = true;
+                    q.render();
+                    console.log(votes);
+                    $.ajax({
+                        type: "POST",
+                        url: loc.protocol + "//" + loc.host + "/queue/upvote/",
+                        data: JSON.stringify({'queue_id': queue_id}),
+                        dataType: 'json',
+                        statusCode: {
+                            200: () => {
+
+                            },
+                            403: () => {
+
                             }
-                        });
-                        q.render();
-
-                    },
-                    403: () => {
-
-                    }
+                        }
+                    });
+                    break;
                 }
-            });
+            }
+
+            let data = {
+                message: 'update_vote',
+                queue_id: queue_id,
+                votes: votes,
+            };
+            socket.send(JSON.stringify(data));
+
         }
         if (event.target.className.includes("vote-down")) {
             event.preventDefault();
-            let vote_element = event.target.parentElement.parentElement;
-            let queue_id = vote_element.getElementsByClassName("queue_id")[0].innerHTML;
-            $.ajax({
-                type: "POST",
-                url: loc.protocol + "//" + loc.host + "/queue/downvote/",
-                data: JSON.stringify({queue_id: queue_id}),
-                dataType: 'json',
-                statusCode: {
-                    200: () => {
-                        // update vote count
-                        // vote_count = vote_element.getElementsByClassName("vote-count")[0];
-                        // vote_count.innerHTML = parseInt(vote_count.innerHTML) - 1;
-                        q.queue.forEach((elem) => {
-                            if (elem.queue_id == queue_id) {
-                                elem.votes -= 1;
-                                elem.newly_added = true;
+            let vote_element = event.target.parentElement.parentElement.parentElement;
+            let queue_id = vote_element.className;
+            for (let i = 0; i < q.tracks.length; i++) {
+                if (q.tracks[i].queue_id === queue_id && q.tracks[i].vote_limit > -1) {
+                    q.tracks[i].votes -= 1;
+                    var votes = q.tracks[i].votes;
+                    q.tracks[i].vote_limit -= 1;
+                    q.tracks[i].newly_added = true;
+                    q.render();
+                    $.ajax({
+                        type: "POST",
+                        url: loc.protocol + "//" + loc.host + "/queue/downvote/",
+                        data: JSON.stringify({queue_id: queue_id}),
+                        dataType: 'json',
+                        statusCode: {
+                            200: () => {
+
+                            },
+                            403: () => {
+
                             }
-                        });
-                        q.render();
-                    },
-                    403: () => {
+                        }
 
-                    }
+                    });
+                    break;
                 }
-
-            });
+            }
+            console.log(votes);
+            let data = {
+                message: 'update_vote',
+                queue_id: queue_id,
+                votes: votes,
+            };
+            socket.send(JSON.stringify(data));
         }
 
     });
@@ -544,7 +688,7 @@ $(document).ready(() => {
             getRefreshedAccessToken();
             setInterval(() => {
                 getRefreshedAccessToken();
-            }, 60000)
+            }, 3600000)
         }, expires_at - Date.now() - 10000);
     }
 
@@ -578,15 +722,15 @@ $(document).ready(() => {
 
         function flush(current_track) {
             nothingPlaying = true;
-            $('#track_name').text("Nothing playing at the moment.");
-            $('#artists').text("Add a song to queue then press play to get started.");
+            $('#track_name').text("Nothing playing at the moment");
+            $('#artists').text("Add a song to queue then press play to get started");
             $('#cover').attr('src', `${loc.protocol}//${loc.host}/static/spotifyQ/img/cover_placeholder.png`);
             console.log('updating other devices when nothing is playing');
             let data = {
                 message: 'update_current_playback',
                 track_id: current_track['id'],
-                track_name: "Nothing playing at the moment.",
-                artists: "Add a song to queue then press play to get started.",
+                track_name: "Nothing playing at the moment",
+                artists: "Add a song to queue then press play to get started",
                 album_name: 'N/A',
                 cover: `${loc.protocol}//${loc.host}/static/spotifyQ/img/cover_placeholder.png`,
                 progress_ms: 0,
@@ -596,7 +740,6 @@ $(document).ready(() => {
         }
 
         function updateCurrentPlayback(current_track, state) {
-            console.log('updating other devices');
             prev_track_id = current_track['id'];
             var artists = [];
             for (let i in current_track['artists'])
@@ -610,6 +753,7 @@ $(document).ready(() => {
                 cover: current_track['album']['images'][0]['url'],
                 progress_ms: state.position,
                 duration_ms: state.duration,
+                paused: state.paused,
             };
             socket.send(JSON.stringify(data));
         }
@@ -630,6 +774,8 @@ $(document).ready(() => {
 
         function playNextSong() {
             nothingPlaying = false;
+            // q.dequeue();
+            // q.render();
             $.ajax({
                 type: "POST",
                 url: loc.protocol + "//" + loc.host + "/queue/next/",
@@ -648,8 +794,11 @@ $(document).ready(() => {
                             },
                             statusCode: {
                                 204: () => {
-                                    if ($("tr").get(0))
-                                        document.getElementsByTagName("tr")[0].remove();
+                                    // if ($("tr").get(0))
+                                    //     document.getElementsByTagName("tr")[0].remove();
+                                    // q.remove();
+                                    // q.render();
+
                                 }
                             }
                         });
@@ -663,6 +812,10 @@ $(document).ready(() => {
                 }
 
             });
+            let data = {
+                message: 'next_song',
+            };
+            socket.send(JSON.stringify(data));
         }
 
         // Playback status updates
@@ -676,11 +829,16 @@ $(document).ready(() => {
                     paused = true;
                     pauseBtn.style.display = 'none';
                     playBtn.style.display = 'inline';
+                    // clearInterval(progressBarTimer);
                 } else {
                     paused = false;
                     pauseBtn.style.display = 'inline';
                     playBtn.style.display = 'none';
                     nothingPlaying = false;
+                    // clearInterval(progressBarTimer);
+                    // progressBarTimer = setInterval(() => {
+                    //     updateProgressBar();
+                    // }, 500);
                 }
                 // Update current playback on other devices on ws
 
@@ -689,18 +847,21 @@ $(document).ready(() => {
                     if (hasTrackInQueue()) {
                         playNextSong();
                     } else {
-                        playNothing();
-                        flush(current_track);
+                        // playNothing();
+                        // flush(current_track);
                     }
                 }
 
                 // start of new song -> consider putting updateCurrentPlayback inside or outside depending on
                 // how often I want to update the devices
-                if (state && state.paused === false && state.duration > 0 && state.position === 0) {
-                    // console.log('Started new song');
-                    updateCurrentPlayback(current_track, state);
-                }
+                // if (state && state.paused === false && state.duration > 0 && state.position === 0) {
+                //     // console.log('Started new song');
+                //     updateCurrentPlayback(current_track, state);
+                // }
 
+                current_track_duration = parseInt(current_track['duration_ms']);
+                current_track_position = parseInt(state.position);
+                updateCurrentPlayback(current_track, state);
 
             }
         });
@@ -739,6 +900,7 @@ $(document).ready(() => {
         player.connect();
 
         playPauseBtn.onclick = function (e) {
+
             if (nothingPlaying && hasTrackInQueue()) {
                 playNextSong();
             }
@@ -759,11 +921,6 @@ $(document).ready(() => {
                 player.nextTrack();
             }
         };
-
-        prevBtn.onclick = function (e) {
-            // use AJAX to play from previously played.
-        };
-
     };
 
 });
