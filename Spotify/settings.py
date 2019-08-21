@@ -126,9 +126,8 @@ STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'spotifyQ/static'),
 )
-
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
