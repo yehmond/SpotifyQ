@@ -1,1 +1,1 @@
-web: python manage.py runserver
+web: daphne Spotify.asgi:application --port $PORT --bind 0.0.0.0
