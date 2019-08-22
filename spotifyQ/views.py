@@ -14,7 +14,7 @@ from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get
 # Create your views here.
 
 STATE_KEY = 'spotify_auth_state'
-REDIRECT_URI = 'https://spotifyq.app/callback'
+REDIRECT_URI = 'https://www.spotifyq.app/callback'
 SEARCH_TOKEN = get_search_token()
 
 # REDIRECT_URI = 'http://192.168.86.222:8000/callback'
