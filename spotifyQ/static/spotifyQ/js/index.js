@@ -60,7 +60,8 @@ $.ajaxSetup({
 $("#pin-form").submit(function (event) {
     event.preventDefault();
     if (pin.value !== "") {
-        const url = 'http://127.0.0.1:8000/verify/';
+        // const url = 'http://127.0.0.1:8000/verify/';
+        const url = `${window.location.protocol}//${window.location.host}/verify/`;
         var data = `pin=${pin.value.toUpperCase()}`;
 
         $.ajax({

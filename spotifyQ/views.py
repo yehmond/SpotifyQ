@@ -14,11 +14,11 @@ from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get
 # Create your views here.
 
 STATE_KEY = 'spotify_auth_state'
-REDIRECT_URI = 'https://what-it-do-baby.herokuapp.com/callback'
+# REDIRECT_URI = 'https://what-it-do-baby.herokuapp.com/callback'
 SEARCH_TOKEN = get_search_token()
 
 # REDIRECT_URI = 'http://192.168.86.222:8000/callback'
-# REDIRECT_URI = 'http://127.0.0.1:8000/callback'
+REDIRECT_URI = 'http://127.0.0.1:8000/callback'
 
 
 
