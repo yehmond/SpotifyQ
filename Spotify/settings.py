@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'kdsc9-idaz)pgfd&3b*epkd))2iion-d+qi&61mid7_-cvlp&3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -125,9 +125,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
 # Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'spotifyQ/static'),
-)
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, 'spotifyQ/static'),
+# )
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
