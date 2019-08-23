@@ -8,8 +8,11 @@ window.mobileAndTabletCheck = function () {
     return check;
 };
 
+let isFirefox = typeof InstallTrigger !== 'undefined';
+let isChrome = navigator.userAgent.indexOf("Chrome") !== -1;
+
 console.log(`Mobile Device: ${mobileAndTabletCheck()}`);
-if (!mobileAndTabletCheck()) {
+if (!mobileAndTabletCheck() && (isChrome || isFirefox)) {
     $(".desktop-only").show();
 }
 
