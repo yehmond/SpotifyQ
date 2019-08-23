@@ -28,8 +28,18 @@
     border-radius: 20px;
 }
 
+img {
+    user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 #cover {
     border-radius: 10px;
+    object-fit: contain;
     width: 75%;
     height: 75%;
     max-width: 400px;
@@ -78,10 +88,6 @@ body {
     /*width: 70px;*/
 }
 
-/*#play-btn {*/
-/*    margin-left: 3px;*/
-/*    margin-right: -3px;*/
-/*}*/
 
 #play-pause-btn:hover {
     transform: scale(1.05);

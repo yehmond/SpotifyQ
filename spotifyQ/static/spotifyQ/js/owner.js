@@ -370,13 +370,16 @@ $(document).ready(() => {
             addBtn.style.color = "#ffffff";
             searchBar.style.backgroundColor = "#343a40";
         }
+        $('html, body').animate({
+            scrollTop: $('#queue').offset().top
+        }, 400);
     };
     my_autoComplete = new autoComplete({
         selector: 'input[name="search-bar"]',
         minChars: 2,
         delay: 200,
         offsetTop: 10,
-        cache: true,
+        cache: false,
         source: searchTracks,
         renderItem: renderItem,
         onSelect: function (e, term, item) {

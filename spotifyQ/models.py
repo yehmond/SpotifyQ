@@ -84,7 +84,7 @@ def generate_pin():
     :return: The generated pin
     """
     pin = ''
-    possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    possible = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789'
 
     for i in range(0, 4):
         pin += possible[randrange(0, len(possible))]
@@ -93,16 +93,23 @@ def generate_pin():
 
 
 def try_create_owner(owner_id, access_token, refresh_token, expires_at):
+    # if Owner.objects.filter(owner_id=owner_id).exists():
+    #     o = Owner.objects.get(owner_id=owner_id)
+    #     o.access_token = access_token
+    #     o.refresh_token = refresh_token
+    #     if datetime.datetime.now() > o.last_login + datetime.timedelta(seconds=21600):
+    #         o.pin = generate_pin()
+    #     o.last_login = datetime.datetime.now()
+    #     o.save()
+    #     return False
+    # else:
+    #     create_owner(owner_id, access_token, refresh_token, expires_at)
+    #     return True
     if Owner.objects.filter(owner_id=owner_id).exists():
-        o = Owner.objects.get(owner_id=owner_id)
-        o.access_token = access_token
-        o.refresh_token = refresh_token
-        if datetime.datetime.now() > o.last_login + datetime.timedelta(seconds=21600):
-            o.pin = generate_pin()
-        o.last_login = datetime.datetime.now()
-        o.save()
-    else:
-        create_owner(owner_id, access_token, refresh_token, expires_at)
+        Owner.objects.get(owner_id=owner_id).delete()
+
+    create_owner(owner_id, access_token, refresh_token, expires_at)
+
 
 
 def create_owner(owner_id, access_token, refresh_token, expires_at):

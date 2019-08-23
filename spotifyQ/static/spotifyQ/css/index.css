@@ -11,6 +11,7 @@ body {
     border-radius: 30px;
     font-size: medium;
     font-weight: bold;
+    padding: 11px;
 }
 
 .main-form {
@@ -24,18 +25,19 @@ body {
 
 .item {
     color: #111111;
-    width: 100%;
-    padding: 1em 0;
-    max-width: 400px;
+    margin: 20px 0 20px 0;
+    width: 95%;
+    max-width: 450px;
     text-align: center;
 }
 
 #pin-box {
-    width: 85%;
+    width: 100%;
+    padding: 0;
     text-align: center;
     font-size: 33px;
     border-style: solid;
-    border-radius: 20px;
+    border-radius: 30px;
     border-color: #ebebeb;
     text-transform: uppercase;
     outline: none;
@@ -46,7 +48,7 @@ body {
 }
 
 #enter {
-    width: 85%;
+    width: 100%;
     color: #ffffff;
 }
 
@@ -54,7 +56,7 @@ body {
     background-color: #1DB954;
     border: solid 1px #1DB954;
     color: #ffffff;
-    width: 85%;
+    width: 100%;
 
 }
 

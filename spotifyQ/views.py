@@ -21,7 +21,6 @@ SEARCH_TOKEN = get_search_token()
 # REDIRECT_URI = 'http://127.0.0.1:8000/callback'
 
 
-
 # BUG
 # When guest remains on guest page after 3 hours and owner has not exited session or modified it
 
@@ -38,10 +37,10 @@ def index(request):
     :return: view of home landing page
     """
     request.session.set_expiry(21600)
-    if 'pin' in request.session:
-        return redirect(reverse('guest'))
-    if 'owner_id' in request.session:
-        return redirect(reverse('owner'))
+    # if 'pin' in request.session:
+    #     return redirect(reverse('guest'))
+    # if 'owner_id' in request.session:
+    #     return redirect(reverse('owner'))
     if request.method == 'POST':
         form = PINForm(request.POST)
         if form.is_valid():
@@ -81,7 +80,7 @@ def owner(request):
     that contains additional features such as:
         - Guest PIN Code
         - Music player control
-        - Veto queue
+        - Skip to next track
         - Terminate Spotify queue
     :param request: contains metadata about the http request
     :return: view of home page, redirects to home page otherwise
@@ -99,6 +98,14 @@ def owner(request):
 
     else:
         return redirect(reverse('index'))
+
+
+def owner_logged_in(request):
+    """
+    Redirected here if owner has logged in already
+    :param request: contains metadata about the http request
+    :return: view of home page, redirects to home page otherwise
+    """
 
 
 def login(request):
@@ -182,7 +189,6 @@ def callback(request):
             expires_at = datetime.datetime.now() + datetime.timedelta(seconds=expires_in - 60)
             print('refreshed expire_at right after login', expires_at)
             try_create_owner(owner_id, access_token, refresh_token, expires_at)
-
             request.session['owner_id'] = owner_id
             # request.session['expires_at'] = expires_at.strftime('%Y/%m/%d, %H:%M:%S')
             return redirect(reverse('owner'))
@@ -201,9 +207,9 @@ def error(request, error_message):
 
 
 def logout(request):
-    owner_id = request.session.get('owner_id')
-    if Owner.objects.filter(owner_id=owner_id).exists():
-        Owner.objects.get(owner_id=owner_id).delete()
+    pin = request.session.get('pin')
+    if Owner.objects.filter(pin=pin).exists():
+        Owner.objects.get(pin=pin).delete()
 
     request.session.flush()
     return redirect('index')
@@ -318,7 +324,6 @@ def queue_flush(request):
 
     except KeyError:
         return JsonResponse({'error': 'malformed syntax'}, status=400)
-
 
 
 def queue_next(request):
@@ -448,7 +453,3 @@ def get_refreshed_access_token(request):
         return JsonResponse({'access_token': access_token}, status=200)
     except KeyError:
         return JsonResponse({'error': 'malformed syntax'}, status=400)
-
-
-
-
