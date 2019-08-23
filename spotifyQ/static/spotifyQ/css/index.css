@@ -4,7 +4,6 @@ body {
 
 .navbar {
     padding: 7px 12px 7px 12px;
-
 }
 
 .btn {
@@ -15,17 +14,17 @@ body {
 }
 
 .main-form {
-    margin: 1em 0;
+    /*background-color: #999999;*/
     display: flex;
-    justify-content: center;
     align-items: center;
     flex-direction: column;
-    padding: 1em 1em;
+    padding: 1vh 15px;
+    min-height: calc(100vh - 54px);
 }
 
 .item {
     color: #111111;
-    margin: 20px 0 20px 0;
+    margin: 1vh 0;
     width: 95%;
     max-width: 450px;
     text-align: center;
@@ -35,7 +34,7 @@ body {
     width: 100%;
     padding: 0;
     text-align: center;
-    font-size: 33px;
+    font-size: 30px;
     border-style: solid;
     border-radius: 30px;
     border-color: #ebebeb;
@@ -68,6 +67,35 @@ body {
 #spotify:focus {
     background-color: #1AA34A;
     border: solid 1px #1AA34A;
+}
+
+.desktop-only {
+    display: none;
+}
+
+table {
+    /*background-color: gray;*/
+}
+
+td, th {
+    /*border: 1px solid black;*/
+    text-align: left;
+    vertical-align: center;
+}
+
+th {
+    width: 60px;
+}
+
+.splash-screen-img {
+    width: 45px;
+    height: 45px;
+    /*padding: 3px 3px;*/
+    /*border-radius: 13px;*/
+}
+
+p {
+    font-size: 13px;
 }
 
 .changing {

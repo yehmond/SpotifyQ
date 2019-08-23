@@ -9,10 +9,10 @@
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" type='text/css' href="{% static '/spotifyQ/css/index.css' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'spotifyQ/img/apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'spotifyQ/img/favicon-32x32.png'%}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'spotifyQ/img/favicon-16x16.png'%}">
-    <link rel="manifest" href="{% static 'spotifyQ/img/site.webmanifest'%}">
-    <link rel="mask-icon" href="{% static 'spotifyQ/img/safari-pinned-tab.svg'%}" color="#5bbad5">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'spotifyQ/img/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'spotifyQ/img/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'spotifyQ/img/site.webmanifest' %}">
+    <link rel="mask-icon" href="{% static 'spotifyQ/img/safari-pinned-tab.svg' %}" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     <title>Spotify Q</title>
@@ -28,8 +28,43 @@
 </header>
 
 <div class="main-form">
+    <table class="item">
+        <tr>
+            <th>
+                <img src="{% static 'spotifyQ/img/music-note.png' %}" class="splash-screen-img" style="padding: 3px">
+            </th>
+            <td>
+                <p>
+                    <strong>Listen Together</strong><br>
+                    SpotifyQ lets everyone at your party or event decide what song to play.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                <img src="{% static 'spotifyQ/img/up-highres.png' %}" class="splash-screen-img">
+            </th>
+            <td>
+                <p>
+                    <strong>Vote</strong><br>
+                    Upvote songs you like, and downvote those you dislike. The highest voted song will be play next.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                <img src="{% static 'spotifyQ/img/spotify-icon.png' %}" class="splash-screen-img">
+            </th>
+            <td>
+                <p>
+                    <strong>Powered by Spotify</strong><br>
+                    Enjoy the world's largest music catalog. Stream any song from Spotify.
+                </p>
+            </td>
+        </tr>
+    </table>
     <div class="item">
-        <h3>Connect to a queue</h3>
+        <h4>Connect to a queue</h4>
         <form id='pin-form' action="{% url 'guest' %}" method="POST">
             {% csrf_token %}
             <input type="text" name='pin' placeholder="PIN" class="anim" id="pin-box" required>
@@ -38,11 +73,11 @@
             </div>
         </form>
     </div>
-    <div class="item">
+    <div class="item desktop-only pt-3">
         <h5>OR</h5>
     </div>
-    <div class="item">
-        <h3>Start a queue</h3>
+    <div class="item desktop-only">
+        <h4>Create a queue</h4>
         <a href="{% url 'login' %}" class="btn btn-success btn-lg" id="spotify" role="button" aria-disabled="true">LOG
             IN WITH SPOTIFY</a>
     </div>

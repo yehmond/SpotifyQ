@@ -1,7 +1,5 @@
 import os
-import uuid
 from random import randrange
-import json
 
 import requests
 from django.core.exceptions import ValidationError
@@ -111,8 +109,7 @@ def try_create_owner(owner_id, access_token, refresh_token, expires_at):
     create_owner(owner_id, access_token, refresh_token, expires_at)
 
 
-
-def create_owner(owner_id, access_token, refresh_token, expires_at):
+def create_owner(owner_id, access_token, refresh_token, expires_at, pin):
     """
     Creates an owner in database
     :param owner_id: Unique Spotify user ID
@@ -121,12 +118,15 @@ def create_owner(owner_id, access_token, refresh_token, expires_at):
     :param expires_at: Time at which access_token expires
     :return: Returns True if owner exists or has been successfully created, False otherwise
     """
+    if Owner.objects.filter(owner_id=owner_id).exists():
+        Owner.objects.get(owner_id=owner_id).delete()
+
     o = Owner.objects.create(owner_id=owner_id,
                              last_login=datetime.datetime.now(),
                              access_token=access_token,
                              refresh_token=refresh_token,
                              expires_at=expires_at,
-                             pin=generate_pin(),)
+                             pin=pin,)
     o.save()
 
 
@@ -265,9 +265,8 @@ def get_homepage_context(**kwargs):
         context['pin'] = o.pin
         get_queue(context, o.owner_id)
         # adds access token to owner.html so Spotify WebPlayer can be initiated with it
-        if 'owner_id' in kwargs:
-            context['access_token'] = access_token
-            context['expires_at'] = expires_at.timestamp() * 1000
+        context['access_token'] = access_token
+        context['expires_at'] = expires_at.timestamp() * 1000
         return context
 
     try:

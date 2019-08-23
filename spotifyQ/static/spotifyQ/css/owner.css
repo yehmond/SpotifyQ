@@ -62,7 +62,7 @@ col {
 
 body {
     font-size: calc(1em + 0.1vw);
-    background-color: white;
+    background-color: #ffffff;
 }
 
 #progress {
@@ -266,4 +266,18 @@ a.disabled {
     40%, 60% {
         transform: translate3d(4px, 0, 0);
     }
+}
+
+#wrapper {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    height: calc(100vh - 54px);
+}
+
+#wrapper, h3 {
+    padding: 0 10px 50px 10px;
+    font-size: calc(2vw + 2vh + 1vmin);
 }

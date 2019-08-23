@@ -8,8 +8,8 @@ from django.shortcuts import render, redirect, reverse, get_object_or_404
 
 from .forms import PINForm
 from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get_spotify_owner_id, \
-    get_homepage_context, try_create_owner, add_song_to_queue, upvote_track, downvote_track, \
-    get_search_token, play_next_track, delete_current_track, play_nothing, refresh_access_token
+    get_homepage_context, create_owner, add_song_to_queue, upvote_track, downvote_track, \
+    get_search_token, play_next_track, delete_current_track, play_nothing, refresh_access_token, generate_pin
 
 # Create your views here.
 
@@ -85,9 +85,9 @@ def owner(request):
     :param request: contains metadata about the http request
     :return: view of home page, redirects to home page otherwise
     """
-    if request.session.__contains__('owner_id'):
-        owner_id = request.session['owner_id']
-        context = get_homepage_context(owner_id=owner_id)
+    if request.session.__contains__('pin'):
+        pin = request.session['pin']
+        context = get_homepage_context(pin=pin)
 
         # Occurs when Owner has been deleted from db (ie. one logs in on two devices and exits session on one of them)
         if context == '-1':
@@ -98,14 +98,6 @@ def owner(request):
 
     else:
         return redirect(reverse('index'))
-
-
-def owner_logged_in(request):
-    """
-    Redirected here if owner has logged in already
-    :param request: contains metadata about the http request
-    :return: view of home page, redirects to home page otherwise
-    """
 
 
 def login(request):
@@ -187,10 +179,10 @@ def callback(request):
             owner_id = get_spotify_owner_id(access_token)
             expires_in = r.json()['expires_in']
             expires_at = datetime.datetime.now() + datetime.timedelta(seconds=expires_in - 60)
-            print('refreshed expire_at right after login', expires_at)
-            try_create_owner(owner_id, access_token, refresh_token, expires_at)
+            pin = generate_pin()
+            create_owner(owner_id, access_token, refresh_token, expires_at, pin)
             request.session['owner_id'] = owner_id
-            # request.session['expires_at'] = expires_at.strftime('%Y/%m/%d, %H:%M:%S')
+            request.session['pin'] = pin
             return redirect(reverse('owner'))
 
 
@@ -335,7 +327,7 @@ def queue_next(request):
         device_id = j['device_id']
         res = play_next_track(pin, device_id)
         if res == '-1':
-            return JsonResponse({'error': 'no tracks currently in queue'}, status=404)
+            return JsonResponse({'error': 'queue session ended'}, status=404)
         return JsonResponse({'queue_id': res}, status=200)
 
     except KeyError:
@@ -412,7 +404,7 @@ def verify(request):
 
 
 def test(request):
-    return render(request, 'spotifyQ/test_button_inside_input.html')
+    return render(request, 'spotifyQ/session_has_ended.html')
 
 
 def search_tracks(request):
