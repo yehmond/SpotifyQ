@@ -31,7 +31,10 @@
     <table class="item">
         <tr>
             <th>
-                <img src="{% static 'spotifyQ/img/music-note.png' %}" class="splash-screen-img" style="padding: 3px">
+                <div class="background">
+                    <img src="{% static 'spotifyQ/img/music-note.png' %}" class="splash-screen-img"
+                         id="music-note">
+                </div>
             </th>
             <td>
                 <p>
@@ -47,7 +50,7 @@
             <td>
                 <p>
                     <strong>Vote</strong><br>
-                    Upvote songs you like, and downvote those you dislike. The highest voted song will be play next.
+                    Upvote songs you like and downvote those you don't like. The highest voted song will play next.
                 </p>
             </td>
         </tr>
