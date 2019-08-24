@@ -563,7 +563,7 @@ $(document).ready(() => {
             if (!j.paused) {
                 progressBarTimer = setInterval(() => {
                     updateProgressBar();
-                }, 500);
+                }, 1000);
             }
 
             console.log("updating playback");
@@ -592,7 +592,7 @@ $(document).ready(() => {
     });
 
     function updateProgressBar() {
-        current_track_position += 500;
+        current_track_position += 1000;
         $(".progress-bar")[0].style.width = (current_track_position / current_track_duration * 100).toString() + "%";
     }
 
