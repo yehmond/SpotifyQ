@@ -22,13 +22,17 @@ img {
     padding: 11px;
 }
 
-.main-form {
+#page-container {
     /*background-color: #999999;*/
+    position: relative;
+    min-height: calc(100vh - 54px);
+}
+
+#content-wrap {
     display: flex;
     align-items: center;
     flex-direction: column;
-    padding: 1vh 15px;
-    min-height: calc(100vh - 54px);
+    padding: 1vh 15px 4.5rem;
 }
 
 .item {
@@ -37,16 +41,16 @@ img {
     width: 95%;
     max-width: 450px;
     text-align: center;
+    padding: 1vh 0 0 0;
 }
 
 #pin-box {
     width: 100%;
-    padding: 0;
     text-align: center;
-    font-size: 30px;
-    border-style: solid;
+    height: 50px;
+    font-size: 27px;
+    border: 1px solid #ebebeb;
     border-radius: 30px;
-    border-color: #ebebeb;
     text-transform: uppercase;
     outline: none;
 }
@@ -58,6 +62,7 @@ img {
 #enter {
     width: 100%;
     color: #ffffff;
+    margin-bottom: 1rem;
 }
 
 #spotify {
@@ -78,8 +83,35 @@ img {
     border: solid 1px #1AA34A;
 }
 
-.desktop-only {
+.hidden {
     display: none;
+}
+
+#device-not-supported {
+    background-color: #111111;
+    color: #ebebeb;
+    /*height: 4.5rem;*/
+    position: fixed;
+    bottom: 0;
+    line-height: 1;
+}
+.hr-sect {
+    display: flex;
+    flex-basis: 100%;
+    align-items: center;
+    color: #111111;
+    margin: 8px 0px;
+}
+
+.hr-sect::before,
+.hr-sect::after {
+    content: "";
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.35);
+    height: 1px;
+    font-size: 0px;
+    line-height: 0px;
+    margin: 0px 8px;
 }
 
 table {
@@ -114,7 +146,7 @@ th {
 }
 
 #music-note {
-    padding: 9px 10px 9px 7px;
+    padding: 8px 10px 9px 7px;
 }
 
 p {
