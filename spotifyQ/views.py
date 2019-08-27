@@ -7,6 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
+from Spotify.settings import DEBUG
 from .forms import PINForm
 from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get_spotify_owner_id, \
     get_homepage_context, create_owner, add_song_to_queue, upvote_track, downvote_track, \
@@ -15,12 +16,11 @@ from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get
 # Create your views here.
 
 STATE_KEY = 'spotify_auth_state'
-# REDIRECT_URI = 'https://www.spotifyq.app/callback'
+if DEBUG:
+    REDIRECT_URI = 'http://127.0.0.1:8000/callback'
+else:
+    REDIRECT_URI = 'https://www.spotifyq.app/callback'
 SEARCH_TOKEN = get_search_token()
-
-
-# REDIRECT_URI = 'http://192.168.86.222:8000/callback'
-REDIRECT_URI = 'http://127.0.0.1:8000/callback'
 
 
 # BUG
