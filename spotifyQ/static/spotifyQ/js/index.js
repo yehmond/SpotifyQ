@@ -10,10 +10,14 @@ window.mobileAndTabletCheck = function () {
 
 let isFirefox = typeof InstallTrigger !== 'undefined';
 let isChrome = navigator.userAgent.indexOf("Chrome") !== -1;
+let isIE = /*@cc_on!@*/false || !!document.documentMode;
+let isEdge = !isIE && !!window.StyleMedia;
 
 console.log(`Mobile Device: ${mobileAndTabletCheck()}`);
-if (!mobileAndTabletCheck() && (isChrome || isFirefox)) {
-    $(".desktop-only").show();
+if (!mobileAndTabletCheck() && (isChrome || isFirefox|| isEdge || isIE)) {
+    $(".create-a-queue").show();
+} else {
+     $("#device-not-supported").show();
 }
 
 

@@ -5,20 +5,22 @@ from urllib.parse import urlencode
 import requests
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, reverse, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import PINForm
 from .models import CLIENT_ID, CLIENT_SECRET, generate_random_string, Owner, get_spotify_owner_id, \
     get_homepage_context, create_owner, add_song_to_queue, upvote_track, downvote_track, \
-    get_search_token, play_next_track, delete_current_track, play_nothing, refresh_access_token, generate_pin
+    get_search_token, play_next_track, delete_current_track, play_nothing, refresh_access_token, generate_pin, create_playlist
 
 # Create your views here.
 
 STATE_KEY = 'spotify_auth_state'
-REDIRECT_URI = 'https://www.spotifyq.app/callback'
+# REDIRECT_URI = 'https://www.spotifyq.app/callback'
 SEARCH_TOKEN = get_search_token()
 
+
 # REDIRECT_URI = 'http://192.168.86.222:8000/callback'
-# REDIRECT_URI = 'http://127.0.0.1:8000/callback'
+REDIRECT_URI = 'http://127.0.0.1:8000/callback'
 
 
 # BUG
@@ -29,7 +31,7 @@ SEARCH_TOKEN = get_search_token()
 # - Every time guest refreshes, check for last login, potentially use request session?
 # - change get_home_context method
 
-
+@csrf_exempt
 def index(request):
     """
     Renders the home landing page
@@ -404,6 +406,10 @@ def verify(request):
 
 
 def test(request):
+    token = "BQAESGQG7-jwJtDS6ZFyXawkGAlvL15EZ2i2JiyQz11NLeHvRySEbC6fcQo_VxQud1nkfDFsrZz-RnQiaGZwzE0Vo9ezbrpHxLP9s7SPNlTYhyQLvbIZtLx3sIToN8D4qkbDt8H_4dbrR5a_kyA3aqWiogccCv1FsMViSHmZSccylGsY3RTVqtQ5Xi8hX5pzBaJXwQqW5CQXaVRZBtn8pEOWnTZ3uh0y4txgI-R8GzXTkwROi_T0aIxohbll"
+    ownerID = 'tqaumdzi6satgrstjzojhocbh'
+    create_playlist(ownerID, token, datetime.datetime.now() + datetime.timedelta(hours=1000))
+    
     return render(request, 'spotifyQ/session_has_ended.html')
 
 

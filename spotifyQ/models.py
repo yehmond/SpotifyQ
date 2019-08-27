@@ -147,6 +147,7 @@ def create_playlist(owner_id, access_token, expires_at):
         'description': 'DO NOT DELETE. This playlist is used to maintain the order of the queue used in SpotifyQ.'
     }
     r = requests.post(endpoint, headers=headers, json=data)
+    print(r.text)
     if r.status_code == 200 or r.status_code == 201:
         return r.json()['id']
     else:

@@ -15,76 +15,102 @@
     <link rel="mask-icon" href="{% static 'spotifyQ/img/safari-pinned-tab.svg' %}" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
-    <title>Spotify Q</title>
+    <title>SpotifyQ</title>
 </head>
 <body>
 <header>
     <nav class="navbar sticky-top navbar-light bg-light">
         <a class="navbar-brand mx-auto" href="{% url 'index' %}">
             <img src="{% static 'spotifyQ/img/q.PNG' %}" width="30" height="30" class="d-inline-block align-top" alt="">
-            Spotify Q
+            SpotifyQ
         </a>
     </nav>
 </header>
 
-<div class="main-form">
-    <table class="item">
-        <tr>
-            <th>
-                <div class="background">
-                    <img src="{% static 'spotifyQ/img/music-note.png' %}" class="splash-screen-img"
-                         id="music-note">
+<div id="page-container">
+{#    <div class="alert alert-info alert-dismissible fade show m-0 pr-4" role="alert">#}
+{#        <p><small>#}
+{#            Currently, your device is able to <i>connect</i> to a queue, but is not able to <i>start</i> a queue since#}
+{#            support for Spotify Web Playback API is required.#}
+{#            To start a queue, navigate to SpotifyQ on Chrome, Firefox, Edge, or IE on a Mac/Windows/Linux.#}
+{#            Support for mobile devices is on the way.#}
+{#        </small></p>#}
+{#        <button type="button" class="close pr-2 pt-1" data-dismiss="alert" aria-label="Close">#}
+{#            <span aria-hidden="true">&times;</span>#}
+{#        </button>#}
+{#    </div>#}
+    <div id="content-wrap">
+        <table class="item">
+            <tr>
+                <th>
+                    <div class="background">
+                        <img src="{% static 'spotifyQ/img/music-note.png' %}" class="splash-screen-img"
+                             id="music-note">
+                    </div>
+                </th>
+                <td>
+                    <p>
+                        <strong>Listen Together</strong><br>
+                        SpotifyQ lets everyone at your party or event decide what songs to play.
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <img src="{% static 'spotifyQ/img/up-highres.png' %}" class="splash-screen-img">
+                </th>
+                <td>
+                    <p>
+                        <strong>Vote</strong><br>
+                        Upvote songs you like. The highest voted song will be played next.
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <img src="{% static 'spotifyQ/img/spotify-icon.png' %}" class="splash-screen-img">
+                </th>
+                <td>
+                    <p>
+                        <strong>Powered by Spotify</strong><br>
+                        Enjoy the world's largest music catalogue. Stream any song from Spotify.
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <div class="item">
+            <h4>Connect to a queue</h4>
+            <form id='pin-form' action="{% url 'guest' %}" method="POST">
+                {% csrf_token %}
+                <input type="text" name='pin' placeholder="PIN" class="anim" id="pin-box" required>
+                <div>
+                    <input type="submit" value="ENTER" formnovalidate class="btn btn-primary btn-lg mt-2" id="enter">
                 </div>
-            </th>
-            <td>
-                <p>
-                    <strong>Listen Together</strong><br>
-                    SpotifyQ lets everyone at your party or event decide what song to play.
-                </p>
-            </td>
-        </tr>
-        <tr>
-            <th>
-                <img src="{% static 'spotifyQ/img/up-highres.png' %}" class="splash-screen-img">
-            </th>
-            <td>
-                <p>
-                    <strong>Vote</strong><br>
-                    Upvote songs you like and downvote those you don't like. The highest voted song will play next.
-                </p>
-            </td>
-        </tr>
-        <tr>
-            <th>
-                <img src="{% static 'spotifyQ/img/spotify-icon.png' %}" class="splash-screen-img">
-            </th>
-            <td>
-                <p>
-                    <strong>Powered by Spotify</strong><br>
-                    Enjoy the world's largest music catalog. Stream any song from Spotify.
-                </p>
-            </td>
-        </tr>
-    </table>
-    <div class="item">
-        <h4>Connect to a queue</h4>
-        <form id='pin-form' action="{% url 'guest' %}" method="POST">
-            {% csrf_token %}
-            <input type="text" name='pin' placeholder="PIN" class="anim" id="pin-box" required>
-            <div>
-                <input type="submit" value="ENTER" formnovalidate class="btn btn-primary btn-lg mt-2" id="enter">
-            </div>
-        </form>
+            </form>
+        </div>
+        <div class="item hidden create-a-queue pt-3">
+            <div class="hr-sect"><strong>OR</strong></div>
+        </div>
+        <div class="item hidden create-a-queue">
+            <h4>Create a queue</h4>
+            <a href="{% url 'login' %}" class="btn btn-success btn-lg" id="spotify" role="button" aria-disabled="true">LOG
+                IN WITH SPOTIFY</a>
+        </div>
     </div>
-    <div class="item desktop-only pt-3">
-        <h5>OR</h5>
-    </div>
-    <div class="item desktop-only">
-        <h4>Create a queue</h4>
-        <a href="{% url 'login' %}" class="btn btn-success btn-lg" id="spotify" role="button" aria-disabled="true">LOG
-            IN WITH SPOTIFY</a>
+    <div class="alert alert-dark alert-dismissible fade show m-0 pr-4 hidden" id="device-not-supported"
+         role="alert">
+        <p><small>
+            Currently, your device is able to <i>connect</i> to a queue, but is not able to <i>start</i> a queue since
+            support for Spotify Web Playback API is required.
+            To start a queue, navigate to SpotifyQ on Chrome, Firefox, Edge, or IE on a Mac/Windows/Linux.
+            Support for mobile devices is on the way.
+        </small></p>
+        <button type="button" class="close pr-2 pt-1" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
 </div>
+
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src='{% static '/spotifyQ/js/index.js' %}'></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
